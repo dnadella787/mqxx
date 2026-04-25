@@ -1,0 +1,18 @@
+# Build output
+/build/
+/cmake-build-*/
+
+# IDE files
+/.idea/
+/.codex/
+
+# AI agent and assistant instruction files
+/**/[Aa][Gg][Ee][Nn][Tt].md
+/**/[Aa][Gg][Ee][Nn][Tt][Ss].md
+/**/[Ss][Kk][Ii][Ll][Ll].md
+/**/[Ss][Kk][Ii][Ll][Ll][Ss].md
+/**/[Cc][Ll][Aa][Uu][Dd][Ee].md
+/**/[Gg][Ee][Mm][Ii][Nn][Ii].md
+/**/[Cc][Oo][Pp][Ii][Ll][Oo][Tt].md
+/**/[Cc][Uu][Rr][Ss][Oo][Rr].md
+/**/.cursorrules

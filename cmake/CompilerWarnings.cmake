@@ -1,0 +1,25 @@
+function(saltpepper_enable_warnings target_name)
+    if(MSVC)
+        target_compile_options(
+            ${target_name}
+            PRIVATE
+                /W4
+                $<$<BOOL:${SALTPEPPER_WARNINGS_AS_ERRORS}>:/WX>)
+    else()
+        target_compile_options(
+            ${target_name}
+            PRIVATE
+                -Wall
+                -Wextra
+                -Wpedantic
+                -Wconversion
+                -Wshadow
+                -Wnon-virtual-dtor
+                -Wold-style-cast
+                -Woverloaded-virtual
+                -Wnull-dereference
+                -Wdouble-promotion
+                -Wformat=2
+                $<$<BOOL:${SALTPEPPER_WARNINGS_AS_ERRORS}>:-Werror>)
+    endif()
+endfunction()
