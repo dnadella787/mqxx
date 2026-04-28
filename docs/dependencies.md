@@ -12,18 +12,42 @@ Dependencies are grouped here so the early prototype stays understandable.
 
 ### CMake
 
+The repository now depends on a CMake configuration with dependable named-module support.
+In practice, this means using a recent CMake release rather than treating modules as an optional
+future improvement.
+
 Used for builds, IDE integration, `compile_commands.json`, and a portable project structure.
 
-### C++20-capable compiler
+### Compiler with strong C++26 module support
 
-The code uses C++20 features such as `std::span`, defaulted comparisons, and non-type template
-parameters for conservative compile-time descriptors.
+The project now builds as C++26.
+The implementation also makes practical use of modern features from C++20 and later such as
+`std::span`, ranges algorithms, defaulted comparisons, designated initializers, and non-type
+template parameters for conservative compile-time descriptors.
+
+Because the project now prefers named C++ modules, compiler support should be evaluated more
+strictly than "does it compile ordinary C++ code?".
+
+What matters here is practical support for:
+
+- named modules
+- module dependency scanning
+- stable diagnostics around exported/imported declarations
+- workable IDE integration
+
+In practice, that means choosing a modern Clang or MSVC toolchain carefully, and testing the exact
+compiler/CMake combination instead of assuming all "C++26" environments behave the same.
 
 ### Boost.Asio
 
 This is the current decision for the eventual event-loop and async I/O integration layer.
 The current repository does not link Boost yet because the first milestone does not need live I/O,
 but the architecture is being shaped around Boost.Asio-style boundaries from the start.
+
+When Boost.Asio integration arrives, the repository should be careful about module boundaries.
+Third-party libraries often remain header-driven even in module-first projects.
+That is acceptable; the important part is that the project's own core boundaries should still favor
+named modules.
 
 ## Test-only dependencies
 
@@ -69,6 +93,20 @@ These should stay out of the prototype until there is a concrete reason:
 - logging frameworks
 - media parsing/packaging libraries
 - authentication/authorization stacks
+
+## Tooling consequences of choosing modules
+
+This decision affects tooling, not just source syntax.
+
+The project should expect to validate:
+
+- compiler support for named modules
+- CMake module dependency scanning behavior
+- module-compatible generator support such as Ninja
+- clang-format and clang-tidy behavior around module interface units
+- CLion indexing and navigation quality
+
+This is one reason the module migration should happen in small steps instead of one large rewrite.
 
 ## Why logging is not added yet
 

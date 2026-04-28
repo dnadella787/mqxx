@@ -1,72 +1,91 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.30)
 
 project(
-    saltpepper
+    mqxx
     VERSION 0.1.0
     DESCRIPTION "Beginner-friendly prototype Media over QUIC relay"
     LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 20)
+if(NOT CMAKE_GENERATOR MATCHES "Ninja" AND NOT CMAKE_GENERATOR MATCHES "Visual Studio")
+    message(
+        FATAL_ERROR
+            "mqxx uses named C++ modules and requires a generator with module support. "
+            "Configure with Ninja, Ninja Multi-Config, or a recent Visual Studio generator.")
+endif()
+
+set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-option(SALTPEPPER_BUILD_TESTS "Build unit and integration-style tests." ON)
-option(SALTPEPPER_ENABLE_CLANG_TIDY "Enable clang-tidy when available." ON)
-option(SALTPEPPER_ENABLE_SANITIZERS "Enable address/undefined sanitizers in supported builds." OFF)
-option(SALTPEPPER_WARNINGS_AS_ERRORS "Treat warnings as errors." OFF)
+option(MQXX_BUILD_TESTS "Build unit and integration-style tests." ON)
+option(MQXX_ENABLE_CLANG_TIDY "Enable clang-tidy when available." ON)
+option(MQXX_ENABLE_SANITIZERS "Enable address/undefined sanitizers in supported builds." OFF)
+option(MQXX_WARNINGS_AS_ERRORS "Treat warnings as errors." OFF)
 
 include(cmake/CompilerWarnings.cmake)
 include(cmake/Sanitizers.cmake)
 
-find_program(SALTPEPPER_CLANG_TIDY_EXE NAMES clang-tidy)
+find_program(MQXX_CLANG_TIDY_EXE NAMES clang-tidy)
 
-add_library(
-    saltpepper_core
-    src/moqt/full_track_name.cpp
-    src/moqt/namespace_registry.cpp
-    src/transport/fake_transport_session.cpp)
+add_library(mqxx_core)
 
-target_include_directories(
-    saltpepper_core
+target_sources(
+    mqxx_core
     PUBLIC
-        ${PROJECT_SOURCE_DIR}/include)
+        FILE_SET cxx_modules
+        TYPE CXX_MODULES
+        FILES
+            src/moqt/full_track_name.cppm
+            src/moqt/namespace_registry.cppm
+            src/moqt/static_track_descriptor.cppm
+            src/transport/transport_session.cppm
+            src/transport/fake_transport_session.cppm)
 
-target_compile_features(saltpepper_core PUBLIC cxx_std_20)
+target_compile_features(mqxx_core PUBLIC cxx_std_26)
 
-saltpepper_enable_warnings(saltpepper_core)
-saltpepper_enable_sanitizers(saltpepper_core)
+mqxx_enable_warnings(mqxx_core)
+mqxx_enable_sanitizers(mqxx_core)
 
-if(SALTPEPPER_ENABLE_CLANG_TIDY AND SALTPEPPER_CLANG_TIDY_EXE)
+if(MQXX_ENABLE_CLANG_TIDY AND MQXX_CLANG_TIDY_EXE)
     set_target_properties(
-        saltpepper_core
+        mqxx_core
         PROPERTIES
-            CXX_CLANG_TIDY "${SALTPEPPER_CLANG_TIDY_EXE};--config-file=${PROJECT_SOURCE_DIR}/.clang-tidy")
+            CXX_CLANG_TIDY "${MQXX_CLANG_TIDY_EXE};--config-file=${PROJECT_SOURCE_DIR}/.clang-tidy")
 endif()
 
-if(SALTPEPPER_BUILD_TESTS)
+if(MQXX_BUILD_TESTS)
     include(CTest)
     enable_testing()
 
     add_executable(
-        saltpepper_tests
+        mqxx_tests
         tests/test_main.cpp
         tests/moqt_name_tests.cpp
         tests/moqt_static_track_descriptor_tests.cpp
         tests/moqt_namespace_registry_tests.cpp
         tests/transport_fake_transport_session_tests.cpp)
 
-    target_link_libraries(saltpepper_tests PRIVATE saltpepper_core)
+    target_sources(
+        mqxx_tests
+        PRIVATE
+            FILE_SET cxx_modules
+            TYPE CXX_MODULES
+            FILES
+                tests/test_framework.cppm)
 
-    saltpepper_enable_warnings(saltpepper_tests)
-    saltpepper_enable_sanitizers(saltpepper_tests)
+    target_link_libraries(mqxx_tests PRIVATE mqxx_core)
+    target_compile_features(mqxx_tests PRIVATE cxx_std_26)
 
-    if(SALTPEPPER_ENABLE_CLANG_TIDY AND SALTPEPPER_CLANG_TIDY_EXE)
+    mqxx_enable_warnings(mqxx_tests)
+    mqxx_enable_sanitizers(mqxx_tests)
+
+    if(MQXX_ENABLE_CLANG_TIDY AND MQXX_CLANG_TIDY_EXE)
         set_target_properties(
-            saltpepper_tests
+            mqxx_tests
             PROPERTIES
-                CXX_CLANG_TIDY "${SALTPEPPER_CLANG_TIDY_EXE};--config-file=${PROJECT_SOURCE_DIR}/.clang-tidy")
+                CXX_CLANG_TIDY "${MQXX_CLANG_TIDY_EXE};--config-file=${PROJECT_SOURCE_DIR}/.clang-tidy")
     endif()
 
-    add_test(NAME saltpepper_tests COMMAND saltpepper_tests)
+    add_test(NAME mqxx_tests COMMAND mqxx_tests)
 endif()

@@ -1,5 +1,5 @@
-function(saltpepper_enable_sanitizers target_name)
-    if(NOT SALTPEPPER_ENABLE_SANITIZERS)
+function(mqxx_enable_sanitizers target_name)
+    if(NOT MQXX_ENABLE_SANITIZERS)
         return()
     endif()
 

@@ -16,9 +16,12 @@ make sense in a larger system.
 The current codebase implements only the first milestone: namespaces and tracks.
 That is enough to establish several important boundaries early:
 
-- protocol model code lives under `include/saltpepper/moqt` and `src/moqt`
-- transport-facing code lives under `include/saltpepper/transport` and `src/transport`
+- protocol model code lives in named modules under `src/moqt`
+- transport-facing code lives in named modules under `src/transport`
 - tests are able to exercise protocol and state-management logic without touching real networking
+
+This is no longer only a future direction.
+The repository has moved its internal project code to named modules for the current milestone.
 
 This split matters because a production relay eventually needs:
 
@@ -26,6 +29,42 @@ This split matters because a production relay eventually needs:
 - deterministic tests for state machines
 - parser and serializer tests that do not depend on packet timing
 - the ability to evolve internal scheduling and caching without rewriting transport code
+
+## Source layout direction with C++ modules
+
+The repository started with headers because they were the easiest bootstrap format for a tiny
+prototype.
+That bootstrap layout has now been retired for core project code.
+
+The direction from here is:
+
+- use named modules for protocol and transport abstractions
+- use small module interfaces instead of umbrella headers
+- keep implementation details unexported by default
+- use headers only where a module boundary is awkward or not worth the cost
+
+The current module layout is intentionally small:
+
+- `mqxx.moqt.full_track_name`
+- `mqxx.moqt.namespace_registry`
+- `mqxx.moqt.static_track_descriptor`
+- `mqxx.transport.session`
+- `mqxx.transport.fake_transport_session`
+
+That structure is useful for more than style:
+
+- it makes exported API surfaces more intentional
+- it reduces accidental transitive inclusion
+- it gives newcomers a clearer signal about what is public versus internal
+
+Important constraint:
+
+The project should adopt modules in a conservative, beginner-friendly way.
+That means:
+
+- avoid clever partition graphs early
+- avoid over-abstracting around compiler quirks
+- explain the module layout in the docs whenever a new module family is introduced
 
 ## Transport direction
 
@@ -37,8 +76,8 @@ Instead, the code should treat `ngtcp2` as one implementation of a transport bou
 
 The boundary introduced in this repository is intentionally small:
 
-- `TransportSession` represents the operations the relay will eventually need
-- `FakeTransportSession` is an in-memory implementation used by tests
+- `transport_session` represents the operations the relay will eventually need
+- `fake_transport_session` is an in-memory implementation used by tests
 
 This is not yet a complete transport design.
 It is only enough abstraction to prevent transport-specific state from leaking into protocol code.
@@ -88,6 +127,12 @@ Implemented now:
 - prefix matching for namespace discovery
 - conservative compile-time track descriptors for developer-defined schemas
 - fake transport infrastructure for future session tests
+
+Recent refactoring direction:
+
+- these first milestone components have been migrated into named modules
+- tests now import project modules directly
+- the next milestones should extend this structure instead of reintroducing internal headers
 
 Not implemented yet:
 

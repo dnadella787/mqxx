@@ -28,8 +28,7 @@ Relevant draft sections:
 
 Current code:
 
-- `include/saltpepper/moqt/full_track_name.hpp`
-- `src/moqt/full_track_name.cpp`
+- `src/moqt/full_track_name.cppm`
 
 What we implement:
 
@@ -60,8 +59,7 @@ Relevant draft sections:
 
 Current code:
 
-- `include/saltpepper/moqt/namespace_registry.hpp`
-- `src/moqt/namespace_registry.cpp`
+- `src/moqt/namespace_registry.cppm`
 
 What we implement:
 
@@ -95,9 +93,8 @@ Relevant draft sections:
 
 Current code:
 
-- `include/saltpepper/transport/transport_session.hpp`
-- `include/saltpepper/transport/fake_transport_session.hpp`
-- `src/transport/fake_transport_session.cpp`
+- `src/transport/transport_session.cppm`
+- `src/transport/fake_transport_session.cppm`
 
 What we implement:
 

@@ -1,11 +1,12 @@
-#include "test_framework.hpp"
+import mqxx.test.framework;
 
+#include <exception>
 #include <iostream>
 
 auto main() -> int {
     int failures = 0;
 
-    for (const auto& test_case : saltpepper::test::registry()) {
+    for (const auto& test_case : mqxx::test::registry()) {
         try {
             test_case.function();
         } catch (const std::exception& exception) {
@@ -15,7 +16,7 @@ auto main() -> int {
     }
 
     if (failures == 0) {
-        std::cout << "[PASS] " << saltpepper::test::registry().size() << " tests passed\n";
+        std::cout << "[PASS] " << mqxx::test::registry().size() << " tests passed\n";
         return 0;
     }
 

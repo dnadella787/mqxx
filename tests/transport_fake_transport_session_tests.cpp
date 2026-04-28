@@ -1,10 +1,23 @@
-#include "saltpepper/transport/fake_transport_session.hpp"
-#include "test_framework.hpp"
+import mqxx.test.framework;
+import mqxx.transport.fake_transport_session;
 
+#include <initializer_list>
 #include <stdexcept>
+#include <vector>
 
-using saltpepper::transport::FakeTransportSession;
-using saltpepper::transport::StreamId;
+#define SP_TEST(name)                                                                              \
+    static void name();                                                                            \
+    static const ::mqxx::test::test_registration name##_registration{#name, &name};                 \
+    static void name()
+
+#define SP_EXPECT(expression)                                                                      \
+    ::mqxx::test::expect_true((expression), #expression, __FILE__, __LINE__)
+
+#define SP_EXPECT_EQ(left, right)                                                                  \
+    ::mqxx::test::expect_equal((left), (right), #left, #right, __FILE__, __LINE__)
+
+using mqxx::transport::fake_transport_session;
+using mqxx::transport::stream_id;
 
 namespace {
 
@@ -15,8 +28,8 @@ auto payload(std::initializer_list<std::uint8_t> bytes) -> std::vector<std::uint
 } // namespace
 
 SP_TEST(fake_transport_records_stream_writes) {
-    FakeTransportSession transport;
-    const StreamId stream_id = transport.open_uni_stream();
+    fake_transport_session transport;
+    const stream_id stream_id = transport.open_uni_stream();
     const auto bytes = payload({0x01U, 0x02U, 0x03U});
 
     transport.write_stream(stream_id, bytes, true);
@@ -28,7 +41,7 @@ SP_TEST(fake_transport_records_stream_writes) {
 }
 
 SP_TEST(fake_transport_records_datagrams) {
-    FakeTransportSession transport(true);
+    fake_transport_session transport(true);
     const auto bytes = payload({0xaaU, 0xbbU});
 
     transport.send_datagram(bytes);
@@ -38,7 +51,7 @@ SP_TEST(fake_transport_records_datagrams) {
 }
 
 SP_TEST(fake_transport_rejects_datagrams_when_disabled) {
-    FakeTransportSession transport(false);
+    fake_transport_session transport(false);
     bool threw = false;
 
     try {
@@ -49,3 +62,7 @@ SP_TEST(fake_transport_rejects_datagrams_when_disabled) {
 
     SP_EXPECT(threw);
 }
+
+#undef SP_EXPECT_EQ
+#undef SP_EXPECT
+#undef SP_TEST
