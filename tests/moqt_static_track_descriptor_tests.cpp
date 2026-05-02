@@ -1,5 +1,5 @@
-import mqxx.moqt.static_track_descriptor;
-import mqxx.test.framework;
+#include "mqxx/moqt/static_track_descriptor.hpp"
+#include "test_framework.hpp"
 
 #define SP_TEST(name)                                                                              \
     static void name();                                                                            \

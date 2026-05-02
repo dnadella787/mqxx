@@ -1,5 +1,5 @@
-import mqxx.moqt.full_track_name;
-import mqxx.test.framework;
+#include "mqxx/moqt/full_track_name.hpp"
+#include "test_framework.hpp"
 
 #include <string_view>
 

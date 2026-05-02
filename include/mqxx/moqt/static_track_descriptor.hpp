@@ -1,15 +1,13 @@
-module;
+#pragma once
+
+#include "mqxx/moqt/full_track_name.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cstddef>
 #include <string_view>
 
-export module mqxx.moqt.static_track_descriptor;
-
-export import mqxx.moqt.full_track_name;
-
-export namespace mqxx::moqt {
+namespace mqxx::moqt {
 
 template <std::size_t size> struct fixed_string {
     std::array<char, size> value{};

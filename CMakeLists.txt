@@ -6,13 +6,6 @@ project(
     DESCRIPTION "Beginner-friendly prototype Media over QUIC relay"
     LANGUAGES CXX)
 
-if(NOT CMAKE_GENERATOR MATCHES "Ninja" AND NOT CMAKE_GENERATOR MATCHES "Visual Studio")
-    message(
-        FATAL_ERROR
-            "mqxx uses named C++ modules and requires a generator with module support. "
-            "Configure with Ninja, Ninja Multi-Config, or a recent Visual Studio generator.")
-endif()
-
 set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -28,21 +21,14 @@ include(cmake/Sanitizers.cmake)
 
 find_program(MQXX_CLANG_TIDY_EXE NAMES clang-tidy)
 
-add_library(mqxx_core)
-
-target_sources(
+add_library(
     mqxx_core
-    PUBLIC
-        FILE_SET cxx_modules
-        TYPE CXX_MODULES
-        FILES
-            src/moqt/full_track_name.cppm
-            src/moqt/namespace_registry.cppm
-            src/moqt/static_track_descriptor.cppm
-            src/transport/transport_session.cppm
-            src/transport/fake_transport_session.cppm)
+    src/moqt/full_track_name.cpp
+    src/moqt/namespace_registry.cpp
+    src/transport/fake_transport_session.cpp)
 
 target_compile_features(mqxx_core PUBLIC cxx_std_26)
+target_include_directories(mqxx_core PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
 mqxx_enable_warnings(mqxx_core)
 mqxx_enable_sanitizers(mqxx_core)
@@ -66,16 +52,9 @@ if(MQXX_BUILD_TESTS)
         tests/moqt_namespace_registry_tests.cpp
         tests/transport_fake_transport_session_tests.cpp)
 
-    target_sources(
-        mqxx_tests
-        PRIVATE
-            FILE_SET cxx_modules
-            TYPE CXX_MODULES
-            FILES
-                tests/test_framework.cppm)
-
     target_link_libraries(mqxx_tests PRIVATE mqxx_core)
     target_compile_features(mqxx_tests PRIVATE cxx_std_26)
+    target_include_directories(mqxx_tests PRIVATE ${PROJECT_SOURCE_DIR}/tests)
 
     mqxx_enable_warnings(mqxx_tests)
     mqxx_enable_sanitizers(mqxx_tests)

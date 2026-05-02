@@ -1,4 +1,4 @@
-import mqxx.test.framework;
+#include "test_framework.hpp"
 
 #include <exception>
 #include <iostream>

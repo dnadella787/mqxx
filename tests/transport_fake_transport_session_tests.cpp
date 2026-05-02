@@ -1,5 +1,5 @@
-import mqxx.test.framework;
-import mqxx.transport.fake_transport_session;
+#include "mqxx/transport/fake_transport_session.hpp"
+#include "test_framework.hpp"
 
 #include <initializer_list>
 #include <stdexcept>

@@ -1,5 +1,5 @@
-import mqxx.moqt.namespace_registry;
-import mqxx.test.framework;
+#include "mqxx/moqt/namespace_registry.hpp"
+#include "test_framework.hpp"
 
 #include <string_view>
 

@@ -12,9 +12,6 @@ The references below are pinned to the current baseline used by this repository:
 - published: 2026-03-02
 - datatracker page: <https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport>
 
-If a later repository change adopts a newer draft, this document should be updated before or with
-the code change.
-
 ## What is implemented right now
 
 ### Namespace and track rendering/parsing
@@ -28,7 +25,8 @@ Relevant draft sections:
 
 Current code:
 
-- `src/moqt/full_track_name.cppm`
+- `include/mqxx/moqt/full_track_name.hpp`
+- `src/moqt/full_track_name.cpp`
 
 What we implement:
 
@@ -43,12 +41,6 @@ What we do not implement yet:
 - SUBSCRIBE, FETCH, or PUBLISH message serialization
 - authorization semantics around track names
 
-Important teaching point:
-
-The draft treats namespace fields and track names as binary values, not as ordinary human strings.
-That matters because a relay must not assume UTF-8 everywhere.
-The renderer/parser in this repository exists so tests and logs have a safe canonical form.
-
 ### Namespace discovery model
 
 Relevant draft sections:
@@ -59,7 +51,8 @@ Relevant draft sections:
 
 Current code:
 
-- `src/moqt/namespace_registry.cppm`
+- `include/mqxx/moqt/namespace_registry.hpp`
+- `src/moqt/namespace_registry.cpp`
 
 What we implement:
 
@@ -75,11 +68,6 @@ What we do not implement yet:
 - `REQUEST_OK` / `REQUEST_ERROR`
 - loop prevention, authorization, or forwarding policy
 
-Important teaching point:
-
-The namespace registry is intentionally smaller than the protocol.
-It is a testable model of prefix matching, not a full namespace discovery implementation.
-
 ### Relay role and transport boundary
 
 Relevant draft sections:
@@ -93,8 +81,9 @@ Relevant draft sections:
 
 Current code:
 
-- `src/transport/transport_session.cppm`
-- `src/transport/fake_transport_session.cppm`
+- `include/mqxx/transport/transport_session.hpp`
+- `include/mqxx/transport/fake_transport_session.hpp`
+- `src/transport/fake_transport_session.cpp`
 
 What we implement:
 
@@ -110,12 +99,6 @@ What we do not implement yet:
 - subscription aggregation
 - authorization checks
 - forwarding behavior
-
-Important teaching point:
-
-Relays terminate transport sessions in the protocol model.
-That is why the codebase introduces a transport boundary early even before real QUIC exists in the
-repository.
 
 ## What is explicitly deferred
 

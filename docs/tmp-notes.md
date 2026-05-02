@@ -10,12 +10,8 @@ It means:
 - keep the runtime model readable
 - explain the pattern in plain language
 
-The project also now prefers named C++ modules for core code.
-That matters for TMP because many C++ codebases historically hide large amounts of TMP in headers.
-This repository should resist that pattern where possible.
-
-The first TMP pattern in this repository is `static_track_descriptor`, exported from the
-`mqxx.moqt.static_track_descriptor` module.
+The first TMP pattern in this repository is `static_track_descriptor`, declared in
+`include/mqxx/moqt/static_track_descriptor.hpp`.
 
 ## What `static_track_descriptor` does
 
@@ -52,19 +48,9 @@ That is a good trade:
 - runtime code stays normal and readable
 - new contributors do not have to learn advanced TMP just to understand the parser
 
-## How TMP should interact with modules
-
-As the repository migrates toward modules, TMP utilities should usually live in one of two places:
-
-- directly in a small module interface when they are part of the exported API
-- in a non-exported implementation unit or partition when they are internal machinery
-
-What should be avoided:
+Because templates live in headers, the discipline here is architectural rather than packaging
+driven. What should be avoided:
 
 - giant header-only TMP utilities that become accidental dependencies everywhere
-- exporting metaprogramming helpers that are only implementation details
-- using modules as an excuse to hide overly complex type tricks
-
-The goal is not "fancy module metaprogramming."
-The goal is a codebase where compile-time structure supports correctness without making the learning
-curve steeper than it needs to be.
+- metaprogramming helpers that leak outside the small API that actually needs them
+- overly clever type tricks that make the runtime protocol model harder to teach

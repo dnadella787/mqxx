@@ -16,12 +16,10 @@ make sense in a larger system.
 The current codebase implements only the first milestone: namespaces and tracks.
 That is enough to establish several important boundaries early:
 
-- protocol model code lives in named modules under `src/moqt`
-- transport-facing code lives in named modules under `src/transport`
-- tests are able to exercise protocol and state-management logic without touching real networking
-
-This is no longer only a future direction.
-The repository has moved its internal project code to named modules for the current milestone.
+- public protocol model declarations live under `include/mqxx/moqt`
+- public transport-facing declarations live under `include/mqxx/transport`
+- behavior-heavy implementation lives in `src/`
+- tests exercise protocol and state-management logic without touching real networking
 
 This split matters because a production relay eventually needs:
 
@@ -30,41 +28,20 @@ This split matters because a production relay eventually needs:
 - parser and serializer tests that do not depend on packet timing
 - the ability to evolve internal scheduling and caching without rewriting transport code
 
-## Source layout direction with C++ modules
+## Source layout direction
 
-The repository started with headers because they were the easiest bootstrap format for a tiny
-prototype.
-That bootstrap layout has now been retired for core project code.
+The repository now uses a conventional include-directory layout:
 
-The direction from here is:
+- public headers in `include/mqxx/...`
+- implementation files in `src/...`
+- test-only helpers in `tests/`
 
-- use named modules for protocol and transport abstractions
-- use small module interfaces instead of umbrella headers
-- keep implementation details unexported by default
-- use headers only where a module boundary is awkward or not worth the cost
+That structure is intentionally small and boring.
+It gives the project:
 
-The current module layout is intentionally small:
-
-- `mqxx.moqt.full_track_name`
-- `mqxx.moqt.namespace_registry`
-- `mqxx.moqt.static_track_descriptor`
-- `mqxx.transport.session`
-- `mqxx.transport.fake_transport_session`
-
-That structure is useful for more than style:
-
-- it makes exported API surfaces more intentional
-- it reduces accidental transitive inclusion
-- it gives newcomers a clearer signal about what is public versus internal
-
-Important constraint:
-
-The project should adopt modules in a conservative, beginner-friendly way.
-That means:
-
-- avoid clever partition graphs early
-- avoid over-abstracting around compiler quirks
-- explain the module layout in the docs whenever a new module family is introduced
+- explicit public include paths
+- straightforward build-system behavior across toolchains
+- implementation files that can change without rewriting the public surface
 
 ## Transport direction
 
@@ -84,22 +61,14 @@ It is only enough abstraction to prevent transport-specific state from leaking i
 
 ## Event loop direction
 
-The concurrency model should be compatible with a Boost.Asio-style event loop.
-That does not mean the code needs to be deeply coupled to Boost.Asio types on day one.
+The concurrency model should be compatible with a standalone Asio-style event loop.
+That does not mean the code needs to be deeply coupled to Asio types on day one.
 
 The practical goal is this:
 
 - async work should flow through explicit interfaces
 - the relay core should be usable from a single-threaded event loop first
 - later milestones can add strands, executors, timers, and coroutine adapters if they are justified
-
-This keeps the beginner story understandable:
-
-- first understand the state machine
-- then understand the event loop
-- then understand concurrency
-
-Instead of mixing all three at once.
 
 ## Testing strategy baked into the layout
 
@@ -127,12 +96,6 @@ Implemented now:
 - prefix matching for namespace discovery
 - conservative compile-time track descriptors for developer-defined schemas
 - fake transport infrastructure for future session tests
-
-Recent refactoring direction:
-
-- these first milestone components have been migrated into named modules
-- tests now import project modules directly
-- the next milestones should extend this structure instead of reintroducing internal headers
 
 Not implemented yet:
 
@@ -166,6 +129,3 @@ Only after the earlier milestones are solid should the project add:
 - publisher priority
 - group order interactions
 - delivery policy and scheduler logic
-
-This sequence matches the project goal of teaching the protocol in layers instead of dropping a
-nearly complete relay skeleton into an empty repository.

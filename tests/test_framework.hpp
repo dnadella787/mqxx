@@ -1,4 +1,4 @@
-module;
+#pragma once
 
 #include <functional>
 #include <sstream>
@@ -8,9 +8,7 @@ module;
 #include <utility>
 #include <vector>
 
-export module mqxx.test.framework;
-
-export namespace mqxx::test {
+namespace mqxx::test {
 
 class test_failure : public std::runtime_error {
   public:

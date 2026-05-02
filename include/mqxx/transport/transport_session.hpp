@@ -1,12 +1,10 @@
-module;
+#pragma once
 
 #include <cstdint>
 #include <span>
 #include <vector>
 
-export module mqxx.transport.session;
-
-export namespace mqxx::transport {
+namespace mqxx::transport {
 
 struct stream_id {
     std::uint64_t value{0};

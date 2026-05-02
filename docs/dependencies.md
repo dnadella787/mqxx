@@ -3,8 +3,8 @@
 ## Philosophy
 
 The project should keep dependencies minimal, but "minimal" does not mean "avoid every library."
-Networking code, testing tools, and transport integration often justify focused dependencies if they
-remove a large amount of custom infrastructure or risk.
+Networking code, testing tools, and transport integration often justify focused dependencies if
+they remove a large amount of custom infrastructure or risk.
 
 Dependencies are grouped here so the early prototype stays understandable.
 
@@ -12,42 +12,23 @@ Dependencies are grouped here so the early prototype stays understandable.
 
 ### CMake
 
-The repository now depends on a CMake configuration with dependable named-module support.
-In practice, this means using a recent CMake release rather than treating modules as an optional
-future improvement.
-
 Used for builds, IDE integration, `compile_commands.json`, and a portable project structure.
 
-### Compiler with strong C++26 module support
+### Compiler with practical C++26 support
 
-The project now builds as C++26.
+The project builds as C++26.
 The implementation also makes practical use of modern features from C++20 and later such as
 `std::span`, ranges algorithms, defaulted comparisons, designated initializers, and non-type
 template parameters for conservative compile-time descriptors.
 
-Because the project now prefers named C++ modules, compiler support should be evaluated more
-strictly than "does it compile ordinary C++ code?".
-
-What matters here is practical support for:
-
-- named modules
-- module dependency scanning
-- stable diagnostics around exported/imported declarations
-- workable IDE integration
-
-In practice, that means choosing a modern Clang or MSVC toolchain carefully, and testing the exact
+In practice, that means choosing a modern Clang or MSVC toolchain carefully and testing the exact
 compiler/CMake combination instead of assuming all "C++26" environments behave the same.
 
-### Boost.Asio
+### standalone Asio
 
 This is the current decision for the eventual event-loop and async I/O integration layer.
-The current repository does not link Boost yet because the first milestone does not need live I/O,
-but the architecture is being shaped around Boost.Asio-style boundaries from the start.
-
-When Boost.Asio integration arrives, the repository should be careful about module boundaries.
-Third-party libraries often remain header-driven even in module-first projects.
-That is acceptable; the important part is that the project's own core boundaries should still favor
-named modules.
+The current repository does not link Asio yet because the first milestone does not need live I/O,
+but the architecture is being shaped around standalone Asio-style boundaries from the start.
 
 ## Test-only dependencies
 
@@ -61,9 +42,6 @@ As the codebase grows, it should adopt one dedicated C++ test framework:
 
 - GoogleTest if the project wants the more conventional fixture-heavy style
 - Catch2 if the project wants a lighter, more expression-oriented style
-
-Either is acceptable.
-The decision should be made before the first larger parser/state-machine wave lands.
 
 ## Optional transport dependencies
 
@@ -93,20 +71,6 @@ These should stay out of the prototype until there is a concrete reason:
 - logging frameworks
 - media parsing/packaging libraries
 - authentication/authorization stacks
-
-## Tooling consequences of choosing modules
-
-This decision affects tooling, not just source syntax.
-
-The project should expect to validate:
-
-- compiler support for named modules
-- CMake module dependency scanning behavior
-- module-compatible generator support such as Ninja
-- clang-format and clang-tidy behavior around module interface units
-- CLion indexing and navigation quality
-
-This is one reason the module migration should happen in small steps instead of one large rewrite.
 
 ## Why logging is not added yet
 
