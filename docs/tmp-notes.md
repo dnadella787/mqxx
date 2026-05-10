@@ -11,7 +11,7 @@ It means:
 - explain the pattern in plain language
 
 The first TMP pattern in this repository is `static_track_descriptor`, declared in
-`include/mqxx/moqt/static_track_descriptor.hpp`.
+`src/moqt/include/mqxx/moqt/static_track_descriptor.hpp`.
 
 ## What `static_track_descriptor` does
 

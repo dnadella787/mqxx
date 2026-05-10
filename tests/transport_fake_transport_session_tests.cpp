@@ -2,7 +2,6 @@
 #include "test_framework.hpp"
 
 #include <initializer_list>
-#include <stdexcept>
 #include <vector>
 
 #define SP_TEST(name)                                                                              \
@@ -16,6 +15,7 @@
 #define SP_EXPECT_EQ(left, right)                                                                  \
     ::mqxx::test::expect_equal((left), (right), #left, #right, __FILE__, __LINE__)
 
+using mqxx::transport::datagram_send_error;
 using mqxx::transport::fake_transport_session;
 using mqxx::transport::stream_id;
 
@@ -44,23 +44,19 @@ SP_TEST(fake_transport_records_datagrams) {
     fake_transport_session transport(true);
     const auto bytes = payload({0xaaU, 0xbbU});
 
-    transport.send_datagram(bytes);
+    const auto send_result = transport.send_datagram(bytes);
 
+    SP_EXPECT(send_result.ok());
     SP_EXPECT_EQ(transport.datagram_writes().size(), 1U);
     SP_EXPECT_EQ(transport.datagram_writes()[0].bytes, bytes);
 }
 
 SP_TEST(fake_transport_rejects_datagrams_when_disabled) {
     fake_transport_session transport(false);
-    bool threw = false;
+    const auto send_result = transport.send_datagram(payload({0x10U}));
 
-    try {
-        transport.send_datagram(payload({0x10U}));
-    } catch (const std::logic_error&) {
-        threw = true;
-    }
-
-    SP_EXPECT(threw);
+    SP_EXPECT(!send_result.ok());
+    SP_EXPECT_EQ(send_result.error(), datagram_send_error::datagrams_not_supported);
 }
 
 #undef SP_EXPECT_EQ

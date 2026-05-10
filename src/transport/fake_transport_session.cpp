@@ -1,7 +1,5 @@
 #include "mqxx/transport/fake_transport_session.hpp"
 
-#include <stdexcept>
-
 namespace mqxx::transport {
 
 fake_transport_session::fake_transport_session(bool datagram_support)
@@ -16,22 +14,24 @@ auto fake_transport_session::open_uni_stream() -> stream_id {
 }
 
 void fake_transport_session::write_stream(const stream_id stream_id,
-                                          std::span<const std::uint8_t> bytes, const bool fin) {
+                                          const common::byte_view bytes, const bool fin) {
     stream_writes_.push_back(stream_write{
         .stream_id = stream_id,
-        .bytes = std::vector<std::uint8_t>{bytes.begin(), bytes.end()},
+        .bytes = common::byte_string{bytes.begin(), bytes.end()},
         .fin = fin,
     });
 }
 
-void fake_transport_session::send_datagram(std::span<const std::uint8_t> bytes) {
+auto fake_transport_session::send_datagram(const common::byte_view bytes) -> datagram_send_result {
     if (!datagram_support_) {
-        throw std::logic_error("transport session does not support datagrams");
+        return datagram_send_result::failure(datagram_send_error::datagrams_not_supported);
     }
 
     datagram_writes_.push_back(datagram_write{
-        .bytes = std::vector<std::uint8_t>{bytes.begin(), bytes.end()},
+        .bytes = common::byte_string{bytes.begin(), bytes.end()},
     });
+
+    return datagram_send_result::success(common::unit{});
 }
 
 auto fake_transport_session::stream_writes() const noexcept -> const std::vector<stream_write>& {

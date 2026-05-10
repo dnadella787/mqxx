@@ -11,13 +11,18 @@ That creates a tension:
 The solution used here is to keep each milestone narrow, but to choose boundaries that would still
 make sense in a larger system.
 
+The protocol baseline for those milestones is currently pinned to
+`draft-ietf-moq-transport-17`, so protocol-shaped modules should be evaluated against that draft
+rather than "latest MOQT" in the abstract.
+
 ## Current architectural slice
 
 The current codebase implements only the first milestone: namespaces and tracks.
 That is enough to establish several important boundaries early:
 
-- public protocol model declarations live under `include/mqxx/moqt`
-- public transport-facing declarations live under `include/mqxx/transport`
+- protocol model interfaces live under `src/moqt/include/...`
+- transport-facing interfaces live under `src/transport/include/...`
+- shared support types live under `src/common/include/...`
 - behavior-heavy implementation lives in `src/`
 - tests exercise protocol and state-management logic without touching real networking
 
@@ -30,18 +35,22 @@ This split matters because a production relay eventually needs:
 
 ## Source layout direction
 
-The repository now uses a conventional include-directory layout:
+The repository now uses a standalone-application layout with module-local include seams:
 
-- public headers in `include/mqxx/...`
-- implementation files in `src/...`
+- each module publishes its own interface from `src/<module>/include/...`
+- implementation `.cpp` files stay under `src/<module>/...`
+- cross-module helpers are exposed intentionally from `src/common/include/...`
 - test-only helpers in `tests/`
 
-That structure is intentionally small and boring.
+That structure matches the stated intent better than either a library-style root `include/` tree
+or a globally visible `src/` include path.
 It gives the project:
 
-- explicit public include paths
+- local module ownership
+- explicit seams between modules
+- one obvious place for shared support interfaces
 - straightforward build-system behavior across toolchains
-- implementation files that can change without rewriting the public surface
+- implementation files that can evolve without being casually included by unrelated modules
 
 ## Transport direction
 
@@ -69,6 +78,10 @@ The practical goal is this:
 - async work should flow through explicit interfaces
 - the relay core should be usable from a single-threaded event loop first
 - later milestones can add strands, executors, timers, and coroutine adapters if they are justified
+
+That same explicitness should apply to error handling.
+Protocol and transport seams should prefer result-returning interfaces with structured error values
+over exception-driven control flow.
 
 ## Testing strategy baked into the layout
 

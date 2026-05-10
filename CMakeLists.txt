@@ -28,7 +28,12 @@ add_library(
     src/transport/fake_transport_session.cpp)
 
 target_compile_features(mqxx_core PUBLIC cxx_std_26)
-target_include_directories(mqxx_core PUBLIC ${PROJECT_SOURCE_DIR}/include)
+target_include_directories(
+    mqxx_core
+    PUBLIC
+        ${PROJECT_SOURCE_DIR}/src/common/include
+        ${PROJECT_SOURCE_DIR}/src/moqt/include
+        ${PROJECT_SOURCE_DIR}/src/transport/include)
 
 mqxx_enable_warnings(mqxx_core)
 mqxx_enable_sanitizers(mqxx_core)
@@ -54,7 +59,10 @@ if(MQXX_BUILD_TESTS)
 
     target_link_libraries(mqxx_tests PRIVATE mqxx_core)
     target_compile_features(mqxx_tests PRIVATE cxx_std_26)
-    target_include_directories(mqxx_tests PRIVATE ${PROJECT_SOURCE_DIR}/tests)
+    target_include_directories(
+        mqxx_tests
+        PRIVATE
+            ${PROJECT_SOURCE_DIR}/tests)
 
     mqxx_enable_warnings(mqxx_tests)
     mqxx_enable_sanitizers(mqxx_tests)

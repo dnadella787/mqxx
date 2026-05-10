@@ -10,7 +10,10 @@ The references below are pinned to the current baseline used by this repository:
 
 - `draft-ietf-moq-transport-17`
 - published: 2026-03-02
-- datatracker page: <https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport>
+- datatracker page: <https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-17>
+
+All protocol notes in this file should be read as draft-17-specific unless a later update says
+otherwise.
 
 ## What is implemented right now
 
@@ -25,7 +28,7 @@ Relevant draft sections:
 
 Current code:
 
-- `include/mqxx/moqt/full_track_name.hpp`
+- `src/moqt/include/mqxx/moqt/full_track_name.hpp`
 - `src/moqt/full_track_name.cpp`
 
 What we implement:
@@ -51,7 +54,7 @@ Relevant draft sections:
 
 Current code:
 
-- `include/mqxx/moqt/namespace_registry.hpp`
+- `src/moqt/include/mqxx/moqt/namespace_registry.hpp`
 - `src/moqt/namespace_registry.cpp`
 
 What we implement:
@@ -81,8 +84,8 @@ Relevant draft sections:
 
 Current code:
 
-- `include/mqxx/transport/transport_session.hpp`
-- `include/mqxx/transport/fake_transport_session.hpp`
+- `src/transport/include/mqxx/transport/transport_session.hpp`
+- `src/transport/include/mqxx/transport/fake_transport_session.hpp`
 - `src/transport/fake_transport_session.cpp`
 
 What we implement:

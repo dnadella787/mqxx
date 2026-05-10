@@ -1,18 +1,16 @@
 #include "test_framework.hpp"
 
-#include <exception>
 #include <iostream>
 
 auto main() -> int {
     int failures = 0;
 
     for (const auto& test_case : mqxx::test::registry()) {
-        try {
-            test_case.function();
-        } catch (const std::exception& exception) {
-            std::cerr << "[FAIL] " << test_case.name << ": " << exception.what() << '\n';
-            ++failures;
-        }
+        mqxx::test::test_context context{.name = test_case.name};
+        mqxx::test::start_test(context);
+        test_case.function();
+        mqxx::test::finish_test();
+        failures += context.failures == 0 ? 0 : 1;
     }
 
     if (failures == 0) {

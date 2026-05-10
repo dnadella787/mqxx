@@ -1,14 +1,15 @@
 #pragma once
 
-#include <cstdint>
-#include <optional>
+#include "mqxx/common/byte_buffer.hpp"
+#include "mqxx/common/result.hpp"
+
 #include <string>
 #include <string_view>
 #include <vector>
 
 namespace mqxx::moqt {
 
-using byte_string = std::vector<std::uint8_t>;
+using byte_string = common::byte_string;
 using track_namespace = std::vector<byte_string>;
 
 struct full_track_name {
@@ -19,7 +20,6 @@ struct full_track_name {
 };
 
 enum class name_parse_error {
-    none,
     missing_track_separator,
     empty_namespace_field,
     invalid_escape,
@@ -29,14 +29,7 @@ enum class name_parse_error {
     full_track_name_too_long,
 };
 
-struct name_parse_result {
-    std::optional<full_track_name> value;
-    name_parse_error error{name_parse_error::none};
-
-    [[nodiscard]] auto ok() const -> bool {
-        return value.has_value();
-    }
-};
+using name_parse_result = common::result<full_track_name, name_parse_error>;
 
 [[nodiscard]] auto render_serialized_name(const byte_string& value) -> std::string;
 [[nodiscard]] auto render_serialized_full_track_name(const full_track_name& name) -> std::string;

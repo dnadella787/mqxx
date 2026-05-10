@@ -32,16 +32,22 @@ but the architecture is being shaped around standalone Asio-style boundaries fro
 
 ## Test-only dependencies
 
-### Future choice: GoogleTest or Catch2
+### GoogleTest
 
-The repository currently uses a tiny built-in test harness so the first milestone can build in an
-empty workspace without network access or vendoring.
+GoogleTest is the accepted long-term unit-test framework for this repository.
+The repository currently still uses a tiny built-in test harness so the first milestone can build
+in an empty workspace without network access or vendoring.
 
-That is a bootstrap choice, not a long-term framework decision.
-As the codebase grows, it should adopt one dedicated C++ test framework:
+That built-in harness is now a bootstrap-only choice, not an open framework decision.
+When the project starts pulling third-party dependencies for regular development, tests should move
+to GoogleTest rather than introducing or evaluating Catch2.
 
-- GoogleTest if the project wants the more conventional fixture-heavy style
-- Catch2 if the project wants a lighter, more expression-oriented style
+GoogleTest fits the repository better because it gives:
+
+- a conventional and widely understood fixture model
+- broad ecosystem familiarity for C++ contributors
+- stable parameterized-test and matcher support as protocol/state-machine coverage grows
+- an easier path for future CI and IDE integration than maintaining a custom harness
 
 ## Optional transport dependencies
 
@@ -68,19 +74,24 @@ These should stay out of the prototype until there is a concrete reason:
 - fuzzing tools
 - benchmarking tools
 - metrics libraries
-- logging frameworks
 - media parsing/packaging libraries
 - authentication/authorization stacks
 
-## Why logging is not added yet
+## Operational dependencies
 
-The prototype needs observability, but not necessarily a full logging dependency.
-Early milestones can use small local logging helpers or standard streams while the architecture is
-still fluid.
+### Quill
 
-A logging framework becomes justified only when the project has:
+Quill is the accepted logging library for this repository once real logging is wired into the
+build.
+The current codebase does not link it yet, but the dependency choice itself is no longer deferred.
 
-- multiple subsystems
-- filtering/verbosity needs
-- structured logging requirements
-- tests that need captureable diagnostic output
+Quill is a good fit here because the project is expected to grow from a small protocol prototype
+into a transport-heavy relay where logging overhead, thread handoff behavior, and filtered
+diagnostics matter.
+
+The expected use is:
+
+- subsystem-oriented logs for transport, protocol, and relay behavior
+- filtered verbosity levels for local debugging and integration testing
+- captureable diagnostics during test and bring-up work
+- structured-enough output to support future operational tooling without inventing a custom logger

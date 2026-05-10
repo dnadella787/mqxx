@@ -2,8 +2,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cctype>
-#include <optional>
 #include <ranges>
 #include <sstream>
 #include <utility>
@@ -14,7 +12,7 @@ namespace {
 constexpr std::size_t kMaxNamespaceFields = 32U;
 constexpr std::size_t kMaxFullTrackNameLength = 4096U;
 
-[[nodiscard]] auto is_literal_byte(std::uint8_t value) -> bool {
+[[nodiscard]] auto is_literal_byte(common::byte value) -> bool {
     return std::isalnum(static_cast<unsigned char>(value)) != 0 ||
            value == static_cast<std::uint8_t>('_');
 }
@@ -36,7 +34,7 @@ constexpr std::size_t kMaxFullTrackNameLength = 4096U;
 }
 
 [[nodiscard]] auto append_parsed_component(std::string_view serialized, byte_string& output)
-    -> std::optional<name_parse_error> {
+    -> common::result<common::unit, name_parse_error> {
     for (std::size_t index = 0; index < serialized.size(); ++index) {
         const char current = serialized[index];
         if (current != '.') {
@@ -45,32 +43,36 @@ constexpr std::size_t kMaxFullTrackNameLength = 4096U;
         }
 
         if (index + 2U >= serialized.size()) {
-            return name_parse_error::invalid_escape;
+            return common::result<common::unit, name_parse_error>::failure(
+                name_parse_error::invalid_escape);
         }
 
         const char high = serialized[index + 1U];
         const char low = serialized[index + 2U];
         if (std::isupper(static_cast<unsigned char>(high)) != 0 ||
             std::isupper(static_cast<unsigned char>(low)) != 0) {
-            return name_parse_error::uppercase_hex_escape;
+            return common::result<common::unit, name_parse_error>::failure(
+                name_parse_error::uppercase_hex_escape);
         }
 
         const int high_value = hex_digit_to_value(high);
         const int low_value = hex_digit_to_value(low);
         if (high_value < 0 || low_value < 0) {
-            return name_parse_error::invalid_escape;
+            return common::result<common::unit, name_parse_error>::failure(
+                name_parse_error::invalid_escape);
         }
 
-        const auto decoded = static_cast<std::uint8_t>((high_value << 4) | low_value);
+        const auto decoded = static_cast<common::byte>((high_value << 4) | low_value);
         if (is_literal_byte(decoded)) {
-            return name_parse_error::redundant_escape;
+            return common::result<common::unit, name_parse_error>::failure(
+                name_parse_error::redundant_escape);
         }
 
         output.push_back(decoded);
         index += 2U;
     }
 
-    return std::nullopt;
+    return common::result<common::unit, name_parse_error>::success(common::unit{});
 }
 
 [[nodiscard]] auto total_binary_length(const full_track_name& name) -> std::size_t {
@@ -88,7 +90,7 @@ auto render_serialized_name(const byte_string& value) -> std::string {
     static constexpr auto kHex = std::to_array("0123456789abcdef");
 
     std::string rendered;
-    for (const std::uint8_t byte : value) {
+    for (const common::byte byte : value) {
         if (is_literal_byte(byte)) {
             rendered.push_back(static_cast<char>(byte));
             continue;
@@ -119,7 +121,7 @@ auto render_serialized_full_track_name(const full_track_name& name) -> std::stri
 auto parse_serialized_full_track_name(std::string_view serialized) -> name_parse_result {
     const std::size_t separator = serialized.find("--");
     if (separator == std::string_view::npos) {
-        return {.value = std::nullopt, .error = name_parse_error::missing_track_separator};
+        return name_parse_result::failure(name_parse_error::missing_track_separator);
     }
 
     full_track_name parsed_name;
@@ -135,19 +137,18 @@ auto parse_serialized_full_track_name(std::string_view serialized) -> name_parse
                 begin, end == std::string_view::npos ? namespace_part.size() - begin : end - begin);
 
             if (field.empty()) {
-                return {.value = std::nullopt, .error = name_parse_error::empty_namespace_field};
+                return name_parse_result::failure(name_parse_error::empty_namespace_field);
             }
 
             byte_string parsed_field;
-            if (const auto error = append_parsed_component(field, parsed_field);
-                error.has_value()) {
-                return {.value = std::nullopt, .error = *error};
+            const auto parsed_field_result = append_parsed_component(field, parsed_field);
+            if (!parsed_field_result.ok()) {
+                return name_parse_result::failure(parsed_field_result.error());
             }
 
             parsed_name.track_namespace.push_back(std::move(parsed_field));
             if (parsed_name.track_namespace.size() > kMaxNamespaceFields) {
-                return {.value = std::nullopt,
-                        .error = name_parse_error::too_many_namespace_fields};
+                return name_parse_result::failure(name_parse_error::too_many_namespace_fields);
             }
 
             if (end == std::string_view::npos) {
@@ -158,16 +159,16 @@ auto parse_serialized_full_track_name(std::string_view serialized) -> name_parse
         }
     }
 
-    if (const auto error = append_parsed_component(track_part, parsed_name.track_name);
-        error.has_value()) {
-        return {.value = std::nullopt, .error = *error};
+    const auto parsed_track_result = append_parsed_component(track_part, parsed_name.track_name);
+    if (!parsed_track_result.ok()) {
+        return name_parse_result::failure(parsed_track_result.error());
     }
 
     if (total_binary_length(parsed_name) > kMaxFullTrackNameLength) {
-        return {.value = std::nullopt, .error = name_parse_error::full_track_name_too_long};
+        return name_parse_result::failure(name_parse_error::full_track_name_too_long);
     }
 
-    return {.value = std::move(parsed_name), .error = name_parse_error::none};
+    return name_parse_result::success(std::move(parsed_name));
 }
 
 auto namespace_starts_with(const track_namespace& candidate_namespace,

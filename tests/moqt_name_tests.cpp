@@ -49,43 +49,43 @@ SP_TEST(render_and_parse_round_trip_for_full_track_name) {
     const auto parsed = parse_serialized_full_track_name(rendered);
 
     SP_EXPECT(parsed.ok());
-    SP_EXPECT_EQ(parsed.value.value(), original);
+    SP_EXPECT_EQ(parsed.value(), original);
 }
 
 SP_TEST(parse_allows_empty_namespace_and_non_empty_track_name) {
     const auto parsed = parse_serialized_full_track_name("--catalog");
 
     SP_EXPECT(parsed.ok());
-    SP_EXPECT_EQ(parsed.value->track_namespace.size(), 0U);
-    SP_EXPECT_EQ(parsed.value->track_name, bytes("catalog"));
+    SP_EXPECT_EQ(parsed.value().track_namespace.size(), 0U);
+    SP_EXPECT_EQ(parsed.value().track_name, bytes("catalog"));
 }
 
 SP_TEST(parse_rejects_missing_track_separator) {
     const auto parsed = parse_serialized_full_track_name("example-camera");
 
     SP_EXPECT(!parsed.ok());
-    SP_EXPECT_EQ(parsed.error, name_parse_error::missing_track_separator);
+    SP_EXPECT_EQ(parsed.error(), name_parse_error::missing_track_separator);
 }
 
 SP_TEST(parse_rejects_uppercase_hex_escapes) {
     const auto parsed = parse_serialized_full_track_name("example--camera.2Dmain");
 
     SP_EXPECT(!parsed.ok());
-    SP_EXPECT_EQ(parsed.error, name_parse_error::uppercase_hex_escape);
+    SP_EXPECT_EQ(parsed.error(), name_parse_error::uppercase_hex_escape);
 }
 
 SP_TEST(parse_rejects_redundant_hex_escapes) {
     const auto parsed = parse_serialized_full_track_name("example--.61udio");
 
     SP_EXPECT(!parsed.ok());
-    SP_EXPECT_EQ(parsed.error, name_parse_error::redundant_escape);
+    SP_EXPECT_EQ(parsed.error(), name_parse_error::redundant_escape);
 }
 
 SP_TEST(parse_rejects_empty_namespace_fields) {
     const auto parsed = parse_serialized_full_track_name("-example--track");
 
     SP_EXPECT(!parsed.ok());
-    SP_EXPECT_EQ(parsed.error, name_parse_error::empty_namespace_field);
+    SP_EXPECT_EQ(parsed.error(), name_parse_error::empty_namespace_field);
 }
 
 #undef SP_EXPECT_EQ

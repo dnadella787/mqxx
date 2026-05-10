@@ -4,6 +4,9 @@
 The repository is intentionally structured so the first milestone stays beginner-friendly while the
 architecture can grow into a production-grade system over the next two to three years.
 
+The repository is currently pinned to the IETF MOQT baseline
+`draft-ietf-moq-transport-17`.
+
 ## Current milestone
 
 This repository currently implements only the first protocol milestone:
@@ -21,14 +24,20 @@ payload handling are not implemented yet.
 
 - Start directly with QUIC, with `ngtcp2` as the initial real transport target.
 - Keep relay logic insulated from the transport stack via an explicit transport abstraction.
-- Keep public interfaces in `include/` and implementation in `src/`.
+- Keep the codebase application-first, but give each module its own `include/` seam under `src/`.
+- Keep shared cross-module support code behind `src/common/include/...`.
 - Prefer a standalone Asio-style event-loop model over early coroutine-heavy design.
 - Build protocol concepts incrementally in this order:
   1. namespaces + tracks
   2. objects
   3. groups
   4. priorities and delivery policy
+- Treat `draft-ietf-moq-transport-17` as the active MOQT protocol baseline until a later draft is
+  adopted explicitly.
+- Prefer explicit result types with structured errors over exception-based control flow.
 - Keep dependencies minimal and categorized.
+- Use Quill when the project introduces a real logging dependency.
+- Standardize on GoogleTest when the repository migrates off the bootstrap test harness.
 - Keep the docs verbose and beginner-friendly, but keep the code comments restrained.
 - Require strong unit tests from the start, plus fake-transport tests that do not depend on real
   QUIC.
@@ -57,4 +66,8 @@ modern features from C++20 and later where they materially help readability and 
 - [Protocol Notes](docs/protocol-notes.md)
 - [Dependency Plan](docs/dependencies.md)
 - [Standalone Asio Decision](docs/decisions/0001-standalone-asio-over-boost-asio.md)
+- [GoogleTest Decision](docs/decisions/0002-googletest-over-catch2.md)
+- [Quill Logging Decision](docs/decisions/0003-quill-for-logging.md)
+- [MOQT Draft 17 Pin](docs/decisions/0004-pin-moqt-baseline-to-draft-17.md)
+- [Result Types Over Exceptions](docs/decisions/0005-prefer-result-types-over-exceptions.md)
 - [TMP Notes](docs/tmp-notes.md)

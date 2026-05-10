@@ -3,7 +3,6 @@
 #include "mqxx/transport/transport_session.hpp"
 
 #include <cstdint>
-#include <span>
 #include <vector>
 
 namespace mqxx::transport {
@@ -14,8 +13,8 @@ class fake_transport_session final : public transport_session {
 
     [[nodiscard]] auto supports_datagrams() const noexcept -> bool override;
     [[nodiscard]] auto open_uni_stream() -> stream_id override;
-    void write_stream(stream_id stream_id, std::span<const std::uint8_t> bytes, bool fin) override;
-    void send_datagram(std::span<const std::uint8_t> bytes) override;
+    void write_stream(stream_id stream_id, common::byte_view bytes, bool fin) override;
+    [[nodiscard]] auto send_datagram(common::byte_view bytes) -> datagram_send_result override;
 
     [[nodiscard]] auto stream_writes() const noexcept -> const std::vector<stream_write>&;
     [[nodiscard]] auto datagram_writes() const noexcept -> const std::vector<datagram_write>&;
