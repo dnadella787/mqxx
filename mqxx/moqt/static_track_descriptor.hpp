@@ -16,7 +16,7 @@ template <std::size_t size> struct fixed_string {
         std::copy_n(text, size, value.begin());
     }
 
-    [[nodiscard]] constexpr auto view() const -> std::string_view {
+    [[nodiscard]] constexpr std::string_view view() const {
         return std::string_view{value.data(), size - 1U};
     }
 };
@@ -28,16 +28,17 @@ struct static_track_descriptor {
 
     static constexpr std::size_t namespace_field_count = sizeof...(namespace_field_values);
 
-    [[nodiscard]] static constexpr auto namespace_fields() {
+    [[nodiscard]] static constexpr std::array<std::string_view, namespace_field_count>
+    namespace_fields() {
         return std::array<std::string_view, namespace_field_count>{
             namespace_field_values.view()...};
     }
 
-    [[nodiscard]] static constexpr auto track_name() -> std::string_view {
+    [[nodiscard]] static constexpr std::string_view track_name() {
         return track_name_value.view();
     }
 
-    [[nodiscard]] static auto make_runtime_name() -> full_track_name {
+    [[nodiscard]] static full_track_name make_runtime_name() {
         full_track_name runtime_name;
         runtime_name.track_namespace.reserve(namespace_field_count);
 

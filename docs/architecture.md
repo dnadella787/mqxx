@@ -1,144 +1,154 @@
 # Architecture Notes
 
-## Why this repository is structured the way it is
+## Architectural target
 
-This project is meant to teach as much as it builds.
-That creates a tension:
+This repository is no longer framed as a names-and-tracks teaching skeleton that might someday
+grow into a relay.
+The current architectural target is a C++ standalone MOQT relay, publisher, and subscriber
+implementation that moves toward
+Moxygen-level behavioral parity for core runtime flows.
 
-- a prototype should be small
-- a relay architecture should not paint itself into a corner
+That means the architecture should be evaluated against questions like:
 
-The solution used here is to keep each milestone narrow, but to choose boundaries that would still
-make sense in a larger system.
+- can a MOQT session/control implementation express the same behaviors cleanly?
+- can publisher and subscriber roles be modeled symmetrically?
+- can a relay act as both subscriber and publisher without transport leakage?
+- can cache and forwarding policy be inserted without rewriting the protocol core?
 
-The protocol baseline for those milestones is currently pinned to
-`draft-ietf-moq-transport-17`, so protocol-shaped modules should be evaluated against that draft
-rather than "latest MOQT" in the abstract.
+The project is still intentionally incremental, but the increments now need to line up with that
+target rather than with a narrow track-naming prototype.
+
+The protocol baseline remains pinned to `draft-ietf-moq-transport-18`.
+Behavioral parity means parity with a known runtime model while still mapping back to the pinned
+draft.
 
 ## Current architectural slice
 
-The current codebase implements only the first milestone: namespaces and tracks.
-That is enough to establish several important boundaries early:
+The current code establishes the public and testing seams for that direction:
 
-- protocol model interfaces live under `src/moqt/include/...`
-- transport-facing interfaces live under `src/transport/include/...`
-- shared support types live under `src/common/include/...`
-- behavior-heavy implementation lives in `src/`
-- tests exercise protocol and state-management logic without touching real networking
+- public headers and implementation files live together under the top-level `mqxx/...` tree
+- tests exercise deterministic logic without depending on real networking
 
-This split matters because a production relay eventually needs:
+What is present now:
 
-- multiple transport back ends
-- deterministic tests for state machines
-- parser and serializer tests that do not depend on packet timing
-- the ability to evolve internal scheduling and caching without rewriting transport code
+- full track name rendering/parsing
+- namespace prefix matching
+- `namespace_registry` as a helper for discovery-oriented state
+- `publisher`, `subscriber`, handle, and consumer interfaces
+- relay/cache seam interfaces
+- a richer session boundary plus an in-memory fake session for tests
 
-## Source layout direction
+What is still missing:
 
-The repository now uses a standalone-application layout with module-local include seams:
+- explicit MOQT setup/setup-response state machines
+- subscribe, subscribe-update, fetch, and publish-namespace control behavior
+- object and group delivery runtime behavior
+- relay forwarding and aggregation logic
+- native QUIC and WebTransport-oriented adapters
 
-- each module publishes its own interface from `src/<module>/include/...`
-- implementation `.cpp` files stay under `src/<module>/...`
-- cross-module helpers are exposed intentionally from `src/common/include/...`
-- test-only helpers in `tests/`
+## Runtime seam direction
 
-That structure matches the stated intent better than either a library-style root `include/` tree
-or a globally visible `src/` include path.
-It gives the project:
+The main internal runtime contract should now be role-based rather than transport-first.
+The runtime and future sample applications should build against:
 
-- local module ownership
-- explicit seams between modules
-- one obvious place for shared support interfaces
-- straightforward build-system behavior across toolchains
-- implementation files that can evolve without being casually included by unrelated modules
+- `publisher`
+- `subscriber`
+- `subscription_handle`
+- `fetch_handle`
+- `publish_namespace_handle`
+- `track_consumer`
+- `subgroup_consumer`
+- `fetch_consumer`
 
-## Transport direction
+Helper types such as `full_track_name`, `track_namespace`, and result types remain important,
+but they are support types for the role-based runtime model.
+`namespace_registry` stays in the codebase, though it is now a helper rather than the center of
+the architecture.
 
-The long-term transport direction is native QUIC first.
-The initial real QUIC target is `ngtcp2`.
+## Relay composition
 
-Even so, relay/session logic should not be written as if `ngtcp2` were the architecture.
-Instead, the code should treat `ngtcp2` as one implementation of a transport boundary.
+A relay should compose around the same public interfaces it exposes to applications.
+The architectural intent is:
 
-The boundary introduced in this repository is intentionally small:
+- upstream behavior is expressed through `subscriber`
+- downstream behavior is expressed through `publisher`
+- a relay type can implement both via `relay_endpoint`
+- cache and policy hooks live beside that composition rather than inside the transport layer
 
-- `transport_session` represents the operations the relay will eventually need
-- `fake_transport_session` is an in-memory implementation used by tests
+The current relay seams are intentionally simple:
 
-This is not yet a complete transport design.
-It is only enough abstraction to prevent transport-specific state from leaking into protocol code.
+- `relay_object_cache` for object retention and lookup
+- `subscription_aggregator` for fan-in tracking
+- `forwarding_policy` for cache-vs-upstream decisions
 
-## Event loop direction
+Those seams are deliberately early because relay behavior tends to get tangled if caching and
+forwarding are introduced after the transport adapter already owns too much policy.
 
-The concurrency model should be compatible with a standalone Asio-style event loop.
-That does not mean the code needs to be deeply coupled to Asio types on day one.
+## Session boundary direction
 
-The practical goal is this:
+The previous minimal transport abstraction was enough to prove that fake tests were possible,
+but it was too narrow for parity-oriented MOQT behavior.
 
-- async work should flow through explicit interfaces
-- the relay core should be usable from a single-threaded event loop first
-- later milestones can add strands, executors, timers, and coroutine adapters if they are justified
+The session boundary now needs to cover:
 
-That same explicitness should apply to error handling.
-Protocol and transport seams should prefer result-returning interfaces with structured error values
-over exception-driven control flow.
+- outbound control messages
+- inbound control messages
+- uni-stream open and write operations
+- inbound uni-stream data
+- datagram send and receive
+- stream reset signals
+- peer/session shutdown signals
+- flow-control notifications
+- delivery notifications
 
-## Testing strategy baked into the layout
+That still does not make the session layer the primary runtime seam.
+It is lower-level infrastructure that transport adapters implement so protocol state machines can
+stay transport-agnostic.
 
-The repository starts with tests because protocol work becomes brittle very quickly if the only
-validation path is an end-to-end network run.
+The long-term transport direction remains dual-track:
 
-The intended testing pyramid is:
+- native QUIC, initially with `ngtcp2`
+- a WebTransport-oriented adapter for browser-adjacent deployments
 
-- parser/serializer unit tests first
-- state-machine tests second
-- fake-transport tests third
-- real transport integration tests once QUIC is connected
+Neither should define the MOQT core model.
 
-That is why the first code focuses on full track names and namespace matching.
-These are protocol-shaped concepts that are easy to specify, easy to test, and foundational for
-later session and relay logic.
+## Event loop and error handling
 
-## Milestone roadmap
+The runtime should remain compatible with a standalone Asio-style event loop.
+The near-term assumptions are still:
 
-### Milestone 1: Namespaces and Tracks
+- explicit async boundaries
+- single-thread-friendly behavior first
+- later strands, timers, executors, or coroutine adapters only when justified
 
-Implemented now:
+The same applies to error handling:
 
-- canonical full track name rendering/parsing
-- prefix matching for namespace discovery
-- conservative compile-time track descriptors for developer-defined schemas
-- fake transport infrastructure for future session tests
+- prefer structured result types
+- keep reset and teardown signals explicit
+- avoid exception-driven control flow across protocol and session seams
 
-Not implemented yet:
+## Testing strategy
 
-- wire-format control messages
-- real relay sessions
-- QUIC handshake/session establishment
+The repository should verify behavior in layers:
 
-### Milestone 2: Objects
+1. parser/serializer tests
+2. protocol state-machine tests
+3. fake-session peer-behavior tests
+4. relay/cache behavior tests
+5. sample-app smoke coverage using fake sessions first
+6. real transport integration tests after behavioral parity is stable
 
-The next milestone should add:
+The current code only covers the first layer fully and the session seam partially.
+That is acceptable as long as the docs describe the gap honestly and new code keeps building toward
+the parity target.
 
-- object identifiers and object metadata types
-- parser/serializer logic for object-oriented data structures
-- state handling for known / unknown / does-not-exist object states
-- tests that cover malformed input and boundary conditions heavily
+## Build stages
 
-### Milestone 3: Groups
-
-This stage should add:
-
-- group IDs
-- group ordering rules
-- group-level state machines
-- later subgroup support where it is needed for stream mapping
-
-### Milestone 4: Priorities and Delivery Policy
-
-Only after the earlier milestones are solid should the project add:
-
-- subscriber priority
-- publisher priority
-- group order interactions
-- delivery policy and scheduler logic
+1. protocol/core types retained and expanded
+2. MOQT session/control-plane state machines
+3. symmetric publisher/subscriber runtime seams
+4. object/group delivery consumer APIs
+5. relay and cache composition layer
+6. fake-session behavioral test harness
+7. native QUIC adapter and WebTransport-oriented adapter
+8. sample publisher, subscriber, and relay applications

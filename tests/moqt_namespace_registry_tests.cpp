@@ -22,12 +22,12 @@ using mqxx::moqt::track_namespace;
 
 namespace {
 
-auto bytes(std::string_view text) -> byte_string {
+byte_string bytes(std::string_view text) {
     return byte_string{text.begin(), text.end()};
 }
 
-auto make_track(std::string_view namespace_a, std::string_view namespace_b,
-                std::string_view track_name) -> full_track_name {
+full_track_name make_track(std::string_view namespace_a, std::string_view namespace_b,
+                           std::string_view track_name) {
     return full_track_name{
         .track_namespace = track_namespace{bytes(namespace_a), bytes(namespace_b)},
         .track_name = bytes(track_name),

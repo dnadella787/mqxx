@@ -4,7 +4,7 @@
 #include <span>
 #include <vector>
 
-namespace mqxx::common {
+namespace mqxx {
 
 using byte = std::uint8_t;
 using byte_string = std::vector<byte>;

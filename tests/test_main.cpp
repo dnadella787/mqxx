@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-auto main() -> int {
+int main() {
     int failures = 0;
 
     for (const auto& test_case : mqxx::test::registry()) {

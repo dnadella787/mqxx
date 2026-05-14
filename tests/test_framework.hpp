@@ -13,7 +13,7 @@ struct test_case {
     void (*function)();
 };
 
-inline auto registry() -> std::vector<test_case>& {
+inline std::vector<test_case>& registry() {
     static std::vector<test_case> tests;
     return tests;
 }

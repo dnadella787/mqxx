@@ -8,12 +8,26 @@ Every protocol-related implementation should be traceable back to a draft sectio
 Because MOQT is still evolving, section numbers can change between draft revisions.
 The references below are pinned to the current baseline used by this repository:
 
-- `draft-ietf-moq-transport-17`
-- published: 2026-03-02
-- datatracker page: <https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-17>
+- `draft-ietf-moq-transport-18`
+- published: 2026-05-12
+- datatracker page: <https://datatracker.ietf.org/doc/draft-ietf-moq-transport/>
 
-All protocol notes in this file should be read as draft-17-specific unless a later update says
+All protocol notes in this file should be read as draft-18-specific unless a later update says
 otherwise.
+
+## Behavioral target
+
+The project target is now behavioral parity with Moxygen's core MOQT runtime model while still
+mapping the implementation back to `draft-ietf-moq-transport-18`.
+
+That means this file has two jobs:
+
+- explain what draft-18 concepts the current code models
+- explain which parity-oriented runtime concepts are only represented as interfaces so far
+
+The current repository does not yet implement full MOQT control behavior.
+It defines core types and runtime seams so that setup, subscribe, fetch, publish-namespace, relay,
+and cache behavior can be built without rewriting the runtime model again.
 
 ## What is implemented right now
 
@@ -28,8 +42,8 @@ Relevant draft sections:
 
 Current code:
 
-- `src/moqt/include/mqxx/moqt/full_track_name.hpp`
-- `src/moqt/full_track_name.cpp`
+- `mqxx/moqt/full_track_name.hpp`
+- `mqxx/moqt/full_track_name.cpp`
 
 What we implement:
 
@@ -54,13 +68,13 @@ Relevant draft sections:
 
 Current code:
 
-- `src/moqt/include/mqxx/moqt/namespace_registry.hpp`
-- `src/moqt/namespace_registry.cpp`
+- `mqxx/moqt/namespace_registry.hpp`
+- `mqxx/moqt/namespace_registry.cpp`
 
 What we implement:
 
 - prefix matching for track namespaces
-- a deterministic in-memory registry that acts like a tiny protocol-free model of discovery state
+- a deterministic in-memory registry that acts like a tiny protocol-free helper for discovery state
 
 What we do not implement yet:
 
@@ -71,37 +85,92 @@ What we do not implement yet:
 - `REQUEST_OK` / `REQUEST_ERROR`
 - loop prevention, authorization, or forwarding policy
 
-### Relay role and transport boundary
+### Role-based runtime surface
 
 Relevant draft sections:
 
-- Section 3.1.2, "QUIC"
-- Section 7, "Priorities"
-- Section 8, "Relays"
-- Section 8.1, "Caching Relays"
-- Section 8.2, "Forward Handling"
-- Section 8.4, "Subscriber Interactions"
+- Section 3, "Sessions"
+- Section 6, "Namespace Discovery"
+- Section 9, "Relays"
+- Section 9.4, "Subscriber Interactions"
 
 Current code:
 
-- `src/transport/include/mqxx/transport/transport_session.hpp`
-- `src/transport/include/mqxx/transport/fake_transport_session.hpp`
-- `src/transport/fake_transport_session.cpp`
+- `mqxx/moqt/session_types.hpp`
+- `mqxx/moqt/session_roles.hpp`
+- `mqxx/moqt/relay_seams.hpp`
 
 What we implement:
 
-- only a minimal transport abstraction
-- only an in-memory fake transport used for tests
+- public request and delivery types for subscription, fetch, publish-namespace, object delivery,
+  status delivery, and resets
+- role-based interfaces for publisher/subscriber symmetry
+- explicit handle types for subscribe-update, unsubscribe, fetch cancel, and namespace withdrawal
+- relay/cache seam interfaces that let a relay compose subscriber and publisher behavior without
+  transport leakage
+
+What we do not implement yet:
+
+- actual setup or subscribe state machines
+- control message parsing/serialization
+- request ID allocation and matching
+- live relay forwarding behavior
+- cache eviction, fan-in policy, or authorization policy
+
+### Session boundary and fake-session harness
+
+Relevant draft sections:
+
+- Section 3.1.3, "WebTransport"
+- Section 3.1.4, "Native QUIC"
+- Section 3.4, "Unidirectional Stream Types"
+- Section 7, "Priorities"
+- Section 8, "Delivery Timeouts and Data Reliability"
+- Section 9, "Relays"
+- Section 9.1, "Caching Relays"
+- Section 9.2, "Forward Handling"
+- Section 9.4, "Subscriber Interactions"
+- Section 10, "Control Messages"
+
+Current code:
+
+- `mqxx/transport/session.hpp`
+- `mqxx/transport/fake_session.hpp`
+- `mqxx/transport/fake_session.cpp`
+
+What we implement:
+
+- a session boundary that can carry:
+  - outbound and inbound control bytes
+  - uni-stream lifecycle and data
+  - datagram send/receive behavior
+  - stream reset signals
+  - peer/session shutdown signals
+  - flow-control notifications
+  - delivery notifications
+- an in-memory fake session for deterministic protocol and relay tests
 
 What we do not implement yet:
 
 - QUIC connections
+- WebTransport-oriented transport wiring
 - MOQT session setup
 - stream prioritization
-- caching
-- subscription aggregation
-- authorization checks
-- forwarding behavior
+- draft-aligned control message encoders/decoders
+- actual relay/cache behavior
+
+## Immediate next protocol work
+
+The next protocol-heavy work should target draft-18 control behavior directly:
+
+- session setup and setup-response
+- publish-namespace / withdraw behavior
+- subscribe / subscribe-update / unsubscribe
+- fetch request and fetch completion behavior
+- track status and status update flows
+- teardown and reset handling
+
+Those changes should use the existing role and session seams rather than bypassing them.
 
 ## What is explicitly deferred
 
@@ -113,9 +182,10 @@ Relevant draft sections:
 
 Deferred reason:
 
-The project is still in the namespaces-and-tracks milestone.
-Adding object logic before the naming and discovery foundations are stable would make the first
-teaching step harder to follow.
+The repository now has object-shaped delivery types in its runtime model, but it does not yet have
+draft-aligned object state machines or relay behavior.
+The next implementation work should add those behaviors carefully instead of pretending the current
+types already imply full object support.
 
 ### Groups
 
@@ -126,8 +196,9 @@ Relevant draft sections:
 
 Deferred reason:
 
-Groups add ordering, join-point, and later scheduler implications.
-Those concepts are better introduced after objects have a clean representation.
+The runtime model now includes group and subgroup boundary concepts because they are part of the
+runtime envelope the relay eventually needs.
+Actual group lifecycle behavior, ordering rules, and stream mapping are still deferred.
 
 ### Priorities and delivery policy
 

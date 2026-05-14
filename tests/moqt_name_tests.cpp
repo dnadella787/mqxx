@@ -24,7 +24,7 @@ using mqxx::moqt::track_namespace;
 
 namespace {
 
-auto bytes(std::string_view text) -> byte_string {
+byte_string bytes(std::string_view text) {
     return byte_string{text.begin(), text.end()};
 }
 

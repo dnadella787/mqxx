@@ -6,7 +6,10 @@ The project should keep dependencies minimal, but "minimal" does not mean "avoid
 Networking code, testing tools, and transport integration often justify focused dependencies if
 they remove a large amount of custom infrastructure or risk.
 
-Dependencies are grouped here so the early prototype stays understandable.
+Dependencies are grouped here so the repo stays easy to reason about while it grows toward fuller
+MOQT library and relay behavior.
+The short repository-wide defaults are summarized in
+[project-decisions.md](project-decisions.md).
 
 ## Required core dependencies
 
@@ -27,20 +30,20 @@ compiler/CMake combination instead of assuming all "C++26" environments behave t
 ### standalone Asio
 
 This is the current decision for the eventual event-loop and async I/O integration layer.
-The current repository does not link Asio yet because the first milestone does not need live I/O,
-but the architecture is being shaped around standalone Asio-style boundaries from the start.
+The current repository does not link Asio yet, but the architecture is being shaped around
+standalone Asio-style boundaries from the start.
 
 ## Test-only dependencies
 
 ### GoogleTest
 
 GoogleTest is the accepted long-term unit-test framework for this repository.
-The repository currently still uses a tiny built-in test harness so the first milestone can build
-in an empty workspace without network access or vendoring.
+The repository currently still uses a tiny built-in test harness so the current code can build in
+an empty workspace without network access or vendoring.
 
 That built-in harness is now a bootstrap-only choice, not an open framework decision.
 When the project starts pulling third-party dependencies for regular development, tests should move
-to GoogleTest rather than introducing or evaluating Catch2.
+to GoogleTest rather than reopening the framework choice.
 
 GoogleTest fits the repository better because it gives:
 
@@ -69,7 +72,7 @@ It becomes relevant only if HTTP/3 or WebTransport support is introduced later.
 
 ## Future dependencies
 
-These should stay out of the prototype until there is a concrete reason:
+These should stay out of the repository until there is a concrete reason:
 
 - fuzzing tools
 - benchmarking tools
@@ -85,9 +88,8 @@ Quill is the accepted logging library for this repository once real logging is w
 build.
 The current codebase does not link it yet, but the dependency choice itself is no longer deferred.
 
-Quill is a good fit here because the project is expected to grow from a small protocol prototype
-into a transport-heavy relay where logging overhead, thread handoff behavior, and filtered
-diagnostics matter.
+Quill is a good fit here because the project is expected to grow into a transport-heavy relay where
+logging overhead, thread handoff behavior, and filtered diagnostics matter.
 
 The expected use is:
 

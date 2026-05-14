@@ -3,10 +3,10 @@
 #include <utility>
 #include <variant>
 
-namespace mqxx::common {
+namespace mqxx {
 
 struct unit {
-    auto operator==(const unit& other) const -> bool = default;
+    bool operator==(const unit& other) const = default;
 };
 
 template <typename Value, typename Error> class result {
@@ -14,31 +14,31 @@ template <typename Value, typename Error> class result {
     using value_type = Value;
     using error_type = Error;
 
-    [[nodiscard]] static auto success(Value value) -> result {
+    [[nodiscard]] static result success(Value value) {
         return result(std::move(value));
     }
 
-    [[nodiscard]] static auto failure(Error error) -> result {
+    [[nodiscard]] static result failure(Error error) {
         return result(std::move(error));
     }
 
-    [[nodiscard]] auto ok() const -> bool {
+    [[nodiscard]] bool ok() const {
         return std::holds_alternative<Value>(storage_);
     }
 
-    [[nodiscard]] auto value() & -> Value& {
+    [[nodiscard]] Value& value() & {
         return std::get<Value>(storage_);
     }
 
-    [[nodiscard]] auto value() const& -> const Value& {
+    [[nodiscard]] const Value& value() const& {
         return std::get<Value>(storage_);
     }
 
-    [[nodiscard]] auto value() && -> Value&& {
+    [[nodiscard]] Value&& value() && {
         return std::get<Value>(std::move(storage_));
     }
 
-    [[nodiscard]] auto error() const -> const Error& {
+    [[nodiscard]] const Error& error() const {
         return std::get<Error>(storage_);
     }
 

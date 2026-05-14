@@ -1,46 +1,84 @@
 # mqxx
 
-`mqxx` starts as a prototype Media over QUIC (MOQT) relay written in modern C++.
-The repository is intentionally structured so the first milestone stays beginner-friendly while the
-architecture can grow into a production-grade system over the next two to three years.
+`mqxx` is a C++ Media over QUIC (MOQT) relay, publisher, and subscriber implementation that is
+being rebased toward
+behavioral parity with Moxygen's core runtime model.
+The goal is not just similar names or a roughly comparable API surface.
+The goal is parity in how MOQT sessions, publisher/subscriber roles, relay forwarding, cache seams,
+and non-media sample flows behave.
 
 The repository is currently pinned to the IETF MOQT baseline
-`draft-ietf-moq-transport-17`.
+`draft-ietf-moq-transport-18`.
 
-## Current milestone
+## Behavioral parity scope
 
-This repository currently implements only the first protocol milestone:
+Parity target now:
 
-- track namespaces
-- full track names
-- canonical text rendering/parsing for track names
-- an in-memory namespace registry for prefix matching
-- a transport abstraction plus a fake transport for tests
+- MOQT session and control-plane behavior
+- symmetric publisher and subscriber runtime seams
+- relay forwarding and cache composition seams
+- non-media sample application behavior
 
-Objects, groups, priorities, delivery policy, real QUIC wiring, authentication, and media-specific
-payload handling are not implemented yet.
+Explicitly deferred for later phases:
+
+- FLV and media-packaging tooling
+- browser and player workflows
+- `moq-encoder-player`-style integration
+
+## Current implementation slice
+
+The repository is still early in that plan.
+What exists today is the start of the parity-oriented surface:
+
+- full track name and namespace utilities
+- deterministic text rendering/parsing for track names
+- an in-memory `namespace_registry` helper for discovery-oriented logic
+- internal role-based MOQT interface types for publishers, subscribers, handles, and consumers
+- relay/cache seam interfaces
+- a richer fake session boundary for control, uni-stream, datagram, reset, shutdown, and delivery
+  events
+
+Real control-plane state machines, object/group delivery logic, relay forwarding behavior, and
+native transport adapters are still ahead.
 
 ## Design rules captured in this repository
 
-- Start directly with QUIC, with `ngtcp2` as the initial real transport target.
-- Keep relay logic insulated from the transport stack via an explicit transport abstraction.
-- Keep the codebase application-first, but give each module its own `include/` seam under `src/`.
-- Keep shared cross-module support code behind `src/common/include/...`.
-- Prefer a standalone Asio-style event-loop model over early coroutine-heavy design.
-- Build protocol concepts incrementally in this order:
-  1. namespaces + tracks
-  2. objects
-  3. groups
-  4. priorities and delivery policy
-- Treat `draft-ietf-moq-transport-17` as the active MOQT protocol baseline until a later draft is
-  adopted explicitly.
+- Keep protocol logic transport-agnostic and map it back to draft-18 explicitly.
+- Treat Moxygen-level runtime behavior as the north star for the MOQT runtime model.
+- Keep the primary runtime seams role-based: publishers, subscribers, handles, and consumers.
+- Demote `namespace_registry` from "main abstraction" to a helper used inside discovery and relay
+  logic.
+- Keep relay logic insulated from transport adapters behind a session boundary.
+- Design transport so native QUIC and WebTransport-oriented adapters are both first-class targets.
 - Prefer explicit result types with structured errors over exception-based control flow.
+- Keep the code under the top-level `mqxx/` tree, following the Moxygen-style single-subtree
+  layout rather than a split header/export structure.
+- Keep implementation `.cpp` files alongside the rest of the code under `mqxx/`, rather than
+  splitting the standalone relay into a separate `src/` tree.
+- Prefer a standalone Asio-style event-loop model over early coroutine-heavy design.
 - Keep dependencies minimal and categorized.
 - Use Quill when the project introduces a real logging dependency.
 - Standardize on GoogleTest when the repository migrates off the bootstrap test harness.
 - Keep the docs verbose and beginner-friendly, but keep the code comments restrained.
-- Require strong unit tests from the start, plus fake-transport tests that do not depend on real
-  QUIC.
+- Require strong unit tests, fake-session tests, and relay-behavior tests before leaning on real
+  networking.
+
+## Build stages
+
+The roadmap is now:
+
+1. protocol/core types retained and expanded
+2. MOQT session/control-plane state machines
+3. symmetric publisher/subscriber runtime seams
+4. object/group delivery consumer APIs
+5. relay and cache composition layer
+6. fake-session behavioral test harness
+7. native QUIC adapter and WebTransport-oriented adapter
+8. sample publisher, subscriber, and relay applications
+
+The current repository sits between stages 1, 3, 5, and 6:
+the interfaces and fake-session seams exist, but the protocol behavior behind them is still
+incomplete.
 
 ## Build
 
@@ -56,18 +94,27 @@ Useful options:
 - `-DMQXX_WARNINGS_AS_ERRORS=ON`
 - `-DMQXX_ENABLE_CLANG_TIDY=OFF`
 
+The CMake layout follows the source tree:
+
+- the root `CMakeLists.txt` owns project-wide options, warning policy, sanitizer wiring, and
+  target assembly
+- each module under `mqxx/` owns its own sources and public headers through a local
+  `CMakeLists.txt`
+- `tests/CMakeLists.txt` owns the test executable separately from the library modules
+
+That keeps the build structure aligned with the directory structure, so adding a new module usually
+means adding a new subdirectory plus a small local `CMakeLists.txt` instead of growing the root
+file indefinitely.
+
 `compile_commands.json` is exported automatically for editor tooling and CLion-style workflows.
 The current baseline is C++26 for project targets, while the implementation still uses practical
 modern features from C++20 and later where they materially help readability and correctness.
 
 ## Read first
 
+- [Beginner Guide](docs/beginner-guide.md)
 - [Architecture Notes](docs/architecture.md)
 - [Protocol Notes](docs/protocol-notes.md)
+- [Project Decisions](docs/project-decisions.md)
 - [Dependency Plan](docs/dependencies.md)
-- [Standalone Asio Decision](docs/decisions/0001-standalone-asio-over-boost-asio.md)
-- [GoogleTest Decision](docs/decisions/0002-googletest-over-catch2.md)
-- [Quill Logging Decision](docs/decisions/0003-quill-for-logging.md)
-- [MOQT Draft 17 Pin](docs/decisions/0004-pin-moqt-baseline-to-draft-17.md)
-- [Result Types Over Exceptions](docs/decisions/0005-prefer-result-types-over-exceptions.md)
-- [TMP Notes](docs/tmp-notes.md)
+- [Code Explanation](docs/code-explanation.md)
