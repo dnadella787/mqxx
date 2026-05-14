@@ -37,6 +37,8 @@ What exists today is the start of the parity-oriented surface:
 - relay/cache seam interfaces
 - a richer fake session boundary for control, uni-stream, datagram, reset, shutdown, and delivery
   events
+- GoogleTest-based deterministic unit coverage for names, registry behavior, role seams, and the
+  fake session
 
 Real control-plane state machines, object/group delivery logic, relay forwarding behavior, and
 native transport adapters are still ahead.
@@ -58,7 +60,7 @@ native transport adapters are still ahead.
 - Prefer a standalone Asio-style event-loop model over early coroutine-heavy design.
 - Keep dependencies minimal and categorized.
 - Use Quill when the project introduces a real logging dependency.
-- Standardize on GoogleTest when the repository migrates off the bootstrap test harness.
+- Use GoogleTest for unit and fake-session behavioral tests.
 - Keep the docs verbose and beginner-friendly, but keep the code comments restrained.
 - Require strong unit tests, fake-session tests, and relay-behavior tests before leaning on real
   networking.
@@ -72,7 +74,7 @@ The roadmap is now:
 3. symmetric publisher/subscriber runtime seams
 4. object/group delivery consumer APIs
 5. relay and cache composition layer
-6. fake-session behavioral test harness
+6. fake-session behavioral test coverage
 7. native QUIC adapter and WebTransport-oriented adapter
 8. sample publisher, subscriber, and relay applications
 
@@ -93,6 +95,7 @@ Useful options:
 - `-DMQXX_ENABLE_SANITIZERS=ON`
 - `-DMQXX_WARNINGS_AS_ERRORS=ON`
 - `-DMQXX_ENABLE_CLANG_TIDY=OFF`
+- `-DMQXX_BUILD_TESTS=OFF`
 
 The CMake layout follows the source tree:
 
@@ -105,6 +108,8 @@ The CMake layout follows the source tree:
 That keeps the build structure aligned with the directory structure, so adding a new module usually
 means adding a new subdirectory plus a small local `CMakeLists.txt` instead of growing the root
 file indefinitely.
+
+Tests prefer an installed GoogleTest package and otherwise fetch GoogleTest during configure time.
 
 `compile_commands.json` is exported automatically for editor tooling and CLion-style workflows.
 The current baseline is C++26 for project targets, while the implementation still uses practical

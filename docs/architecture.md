@@ -149,6 +149,6 @@ the parity target.
 3. symmetric publisher/subscriber runtime seams
 4. object/group delivery consumer APIs
 5. relay and cache composition layer
-6. fake-session behavioral test harness
+6. fake-session behavioral test coverage
 7. native QUIC adapter and WebTransport-oriented adapter
 8. sample publisher, subscriber, and relay applications

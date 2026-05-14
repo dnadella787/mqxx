@@ -37,13 +37,10 @@ standalone Asio-style boundaries from the start.
 
 ### GoogleTest
 
-GoogleTest is the accepted long-term unit-test framework for this repository.
-The repository currently still uses a tiny built-in test harness so the current code can build in
-an empty workspace without network access or vendoring.
-
-That built-in harness is now a bootstrap-only choice, not an open framework decision.
-When the project starts pulling third-party dependencies for regular development, tests should move
-to GoogleTest rather than reopening the framework choice.
+GoogleTest is the repository's unit and fake-session test framework.
+The CMake build first looks for an installed GoogleTest package and otherwise fetches a pinned
+release during configure time.
+For fully offline builds, either preinstall GoogleTest or configure with `-DMQXX_BUILD_TESTS=OFF`.
 
 GoogleTest fits the repository better because it gives:
 

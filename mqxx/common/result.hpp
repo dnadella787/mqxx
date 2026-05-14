@@ -49,4 +49,4 @@ template <typename Value, typename Error> class result {
     std::variant<Value, Error> storage_;
 };
 
-} // namespace mqxx::common
+} // namespace mqxx

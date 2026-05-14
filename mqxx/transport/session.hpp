@@ -103,9 +103,8 @@ struct delivery_notification {
 };
 
 using session_event = std::variant<inbound_control_message, inbound_uni_stream_data,
-                                   inbound_datagram, stream_reset_signal,
-                                   session_shutdown_signal, flow_control_update,
-                                   delivery_notification>;
+                                   inbound_datagram, stream_reset_signal, session_shutdown_signal,
+                                   flow_control_update, delivery_notification>;
 
 class session {
   public:
@@ -114,7 +113,8 @@ class session {
     [[nodiscard]] virtual bool supports_datagrams() const noexcept = 0;
     [[nodiscard]] virtual open_uni_stream_result open_uni_stream() = 0;
     virtual session_write_result send_control(byte_view bytes) = 0;
-    virtual session_write_result send_uni_stream(stream_id stream_id, byte_view bytes, bool fin) = 0;
+    virtual session_write_result send_uni_stream(stream_id stream_id, byte_view bytes,
+                                                 bool fin) = 0;
     [[nodiscard]] virtual datagram_send_result send_datagram(byte_view bytes) = 0;
     [[nodiscard]] virtual std::optional<session_event> poll_event() = 0;
 };

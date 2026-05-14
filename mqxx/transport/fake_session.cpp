@@ -28,8 +28,8 @@ session_write_result fake_session::send_control(const byte_view bytes) {
     return session_write_result::success(unit{});
 }
 
-session_write_result fake_session::send_uni_stream(const stream_id stream_id,
-                                                   const byte_view bytes, const bool fin) {
+session_write_result fake_session::send_uni_stream(const stream_id stream_id, const byte_view bytes,
+                                                   const bool fin) {
     if (send_closed_) {
         return write_closed();
     }

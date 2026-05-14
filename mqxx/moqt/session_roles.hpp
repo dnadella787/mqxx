@@ -103,8 +103,8 @@ class subscriber {
   public:
     virtual ~subscriber() = default;
 
-    [[nodiscard]] virtual subscribe_result
-    subscribe(subscription_request request, track_consumer& consumer) = 0;
+    [[nodiscard]] virtual subscribe_result subscribe(subscription_request request,
+                                                     track_consumer& consumer) = 0;
     [[nodiscard]] virtual fetch_result fetch(fetch_request request, fetch_consumer& consumer) = 0;
 };
 

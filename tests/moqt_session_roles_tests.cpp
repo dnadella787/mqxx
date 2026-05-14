@@ -1,26 +1,16 @@
- #include "mqxx/moqt/relay_seams.hpp"
-#include "test_framework.hpp"
+#include "mqxx/moqt/relay_seams.hpp"
+
+#include <gtest/gtest.h>
 
 #include <memory>
 #include <string_view>
 #include <utility>
 #include <vector>
 
-#define SP_TEST(name)                                                                              \
-    static void name();                                                                            \
-    static const ::mqxx::test::test_registration name##_registration{#name, &name};                 \
-    static void name()
-
-#define SP_EXPECT(expression)                                                                      \
-    ::mqxx::test::expect_true((expression), #expression, __FILE__, __LINE__)
-
-#define SP_EXPECT_EQ(left, right)                                                                  \
-    ::mqxx::test::expect_equal((left), (right), #left, #right, __FILE__, __LINE__)
-
 using mqxx::byte_string;
-using mqxx::moqt::fetch_request;
 using mqxx::moqt::fetch_consumer;
 using mqxx::moqt::fetch_handle;
+using mqxx::moqt::fetch_request;
 using mqxx::moqt::forwarding_decision;
 using mqxx::moqt::forwarding_policy;
 using mqxx::moqt::full_track_name;
@@ -35,11 +25,11 @@ using mqxx::moqt::relay_endpoint;
 using mqxx::moqt::relay_object_cache;
 using mqxx::moqt::request_reset;
 using mqxx::moqt::request_reset_code;
-using mqxx::moqt::subscriber;
-using mqxx::moqt::subscription_handle;
-using mqxx::moqt::subscription_aggregator;
-using mqxx::moqt::subscription_request;
 using mqxx::moqt::subgroup_boundary;
+using mqxx::moqt::subscriber;
+using mqxx::moqt::subscription_aggregator;
+using mqxx::moqt::subscription_handle;
+using mqxx::moqt::subscription_request;
 using mqxx::moqt::track_consumer;
 using mqxx::moqt::track_namespace;
 using mqxx::moqt::track_status;
@@ -80,13 +70,21 @@ object_message make_object(std::string_view track_name, std::uint64_t object_id)
 
 class recording_track_consumer final : public track_consumer {
   public:
-    void on_object(const object_message& object) override { objects.push_back(object); }
+    void on_object(const object_message& object) override {
+        objects.push_back(object);
+    }
     void on_group_boundary(const group_boundary& boundary) override {
         boundaries.push_back(boundary);
     }
-    void on_end_of_track(const full_track_name& track) override { end_of_track = track; }
-    void on_track_status(const track_status& status) override { statuses.push_back(status); }
-    void on_reset(const request_reset& reset) override { resets.push_back(reset); }
+    void on_end_of_track(const full_track_name& track) override {
+        end_of_track = track;
+    }
+    void on_track_status(const track_status& status) override {
+        statuses.push_back(status);
+    }
+    void on_reset(const request_reset& reset) override {
+        resets.push_back(reset);
+    }
 
     std::vector<object_message> objects;
     std::vector<group_boundary> boundaries;
@@ -97,10 +95,18 @@ class recording_track_consumer final : public track_consumer {
 
 class recording_fetch_consumer final : public fetch_consumer {
   public:
-    void on_object(const object_message& object) override { objects.push_back(object); }
-    void on_end_of_fetch(const full_track_name& track) override { end_of_fetch = track; }
-    void on_track_status(const track_status& status) override { statuses.push_back(status); }
-    void on_reset(const request_reset& reset) override { resets.push_back(reset); }
+    void on_object(const object_message& object) override {
+        objects.push_back(object);
+    }
+    void on_end_of_fetch(const full_track_name& track) override {
+        end_of_fetch = track;
+    }
+    void on_track_status(const track_status& status) override {
+        statuses.push_back(status);
+    }
+    void on_reset(const request_reset& reset) override {
+        resets.push_back(reset);
+    }
 
     std::vector<object_message> objects;
     std::optional<full_track_name> end_of_fetch;
@@ -118,7 +124,9 @@ class recording_subscription_handle final : public subscription_handle {
         ++update_calls;
     }
 
-    void unsubscribe() override { unsubscribed = true; }
+    void unsubscribe() override {
+        unsubscribed = true;
+    }
 
     subscription_request current_request;
     std::size_t update_calls{0};
@@ -127,7 +135,9 @@ class recording_subscription_handle final : public subscription_handle {
 
 class recording_fetch_handle final : public fetch_handle {
   public:
-    void cancel() override { cancelled = true; }
+    void cancel() override {
+        cancelled = true;
+    }
 
     bool cancelled{false};
 };
@@ -141,9 +151,13 @@ class recording_publish_namespace_handle final : public publish_namespace_handle
         return published_namespace_;
     }
 
-    void withdraw() override { withdrawn = true; }
+    void withdraw() override {
+        withdrawn = true;
+    }
 
-    void publish_track_status(const track_status& status) override { statuses.push_back(status); }
+    void publish_track_status(const track_status& status) override {
+        statuses.push_back(status);
+    }
 
     track_namespace published_namespace_;
     std::vector<track_status> statuses;
@@ -152,7 +166,9 @@ class recording_publish_namespace_handle final : public publish_namespace_handle
 
 class recording_cache final : public relay_object_cache {
   public:
-    void retain_object(const object_message& object) override { objects.push_back(object); }
+    void retain_object(const object_message& object) override {
+        objects.push_back(object);
+    }
 
     [[nodiscard]] std::vector<object_message>
     lookup(const subscription_request& request) const override {
@@ -174,8 +190,12 @@ class recording_aggregator final : public subscription_aggregator {
         return aggregate;
     }
 
-    void note_subscribe(const full_track_name& track) override { subscribed.push_back(track); }
-    void note_unsubscribe(const full_track_name& track) override { unsubscribed.push_back(track); }
+    void note_subscribe(const full_track_name& track) override {
+        subscribed.push_back(track);
+    }
+    void note_unsubscribe(const full_track_name& track) override {
+        unsubscribed.push_back(track);
+    }
 
     bool aggregate{true};
     std::vector<full_track_name> subscribed;
@@ -197,14 +217,14 @@ class demo_relay final : public relay_endpoint {
 
     [[nodiscard]] mqxx::moqt::publish_namespace_result
     publish_namespace(publish_namespace_request request) override {
-        auto handle = std::make_unique<recording_publish_namespace_handle>(
-            request.published_namespace);
+        auto handle =
+            std::make_unique<recording_publish_namespace_handle>(request.published_namespace);
         last_namespace_handle = handle.get();
         return mqxx::moqt::publish_namespace_result::success(std::move(handle));
     }
 
-    [[nodiscard]] mqxx::moqt::subscribe_result
-    subscribe(subscription_request request, track_consumer& consumer) override {
+    [[nodiscard]] mqxx::moqt::subscribe_result subscribe(subscription_request request,
+                                                         track_consumer& consumer) override {
         aggregator_.note_subscribe(request.track);
 
         if (policy_.decide(request) == forwarding_decision::satisfy_from_cache) {
@@ -219,8 +239,8 @@ class demo_relay final : public relay_endpoint {
         return mqxx::moqt::subscribe_result::success(std::move(handle));
     }
 
-    [[nodiscard]] mqxx::moqt::fetch_result
-    fetch(fetch_request request, fetch_consumer& consumer) override {
+    [[nodiscard]] mqxx::moqt::fetch_result fetch(fetch_request request,
+                                                 fetch_consumer& consumer) override {
         const subscription_request equivalent_request{
             .track = request.track,
             .range = request.range,
@@ -250,7 +270,7 @@ class demo_relay final : public relay_endpoint {
 
 } // namespace
 
-SP_TEST(role_based_relay_surface_supports_publish_subscribe_and_fetch_flows) {
+TEST(MoqtSessionRolesTest, RoleBasedRelaySurfaceSupportsPublishSubscribeAndFetchFlows) {
     recording_cache cache;
     recording_aggregator aggregator;
     allow_all_policy policy;
@@ -271,9 +291,9 @@ SP_TEST(role_based_relay_surface_supports_publish_subscribe_and_fetch_flows) {
     };
 
     const auto subscribe_result = relay.subscribe(subscribe_request, track_consumer);
-    SP_EXPECT(subscribe_result.ok());
-    SP_EXPECT_EQ(track_consumer.objects.size(), 2U);
-    SP_EXPECT_EQ(aggregator.subscribed.size(), 1U);
+    ASSERT_TRUE(subscribe_result.ok());
+    EXPECT_EQ(track_consumer.objects.size(), 2U);
+    EXPECT_EQ(aggregator.subscribed.size(), 1U);
 
     subscribe_result.value()->subscribe_update(subscription_request{
         .track = subscribe_request.track,
@@ -291,22 +311,22 @@ SP_TEST(role_based_relay_surface_supports_publish_subscribe_and_fetch_flows) {
     });
     subscribe_result.value()->unsubscribe();
 
-    SP_EXPECT(relay.last_subscription_handle != nullptr);
-    SP_EXPECT_EQ(relay.last_subscription_handle->update_calls, 1U);
-    SP_EXPECT(relay.last_subscription_handle->unsubscribed);
+    ASSERT_NE(relay.last_subscription_handle, nullptr);
+    EXPECT_EQ(relay.last_subscription_handle->update_calls, 1U);
+    EXPECT_TRUE(relay.last_subscription_handle->unsubscribed);
 
-    const auto fetch_result = relay.fetch(fetch_request{.track = subscribe_request.track},
-                                          fetch_consumer);
-    SP_EXPECT(fetch_result.ok());
+    const auto fetch_result =
+        relay.fetch(fetch_request{.track = subscribe_request.track}, fetch_consumer);
+    ASSERT_TRUE(fetch_result.ok());
     fetch_result.value()->cancel();
-    SP_EXPECT_EQ(fetch_consumer.objects.size(), 2U);
-    SP_EXPECT(fetch_consumer.end_of_fetch.has_value());
-    SP_EXPECT(relay.last_fetch_handle != nullptr);
-    SP_EXPECT(relay.last_fetch_handle->cancelled);
+    EXPECT_EQ(fetch_consumer.objects.size(), 2U);
+    EXPECT_TRUE(fetch_consumer.end_of_fetch.has_value());
+    ASSERT_NE(relay.last_fetch_handle, nullptr);
+    EXPECT_TRUE(relay.last_fetch_handle->cancelled);
 
     const auto publish_result = relay.publish_namespace(
         publish_namespace_request{.published_namespace = subscribe_request.track.track_namespace});
-    SP_EXPECT(publish_result.ok());
+    ASSERT_TRUE(publish_result.ok());
     publish_result.value()->publish_track_status(track_status{
         .track = subscribe_request.track,
         .code = track_status_code::active,
@@ -319,12 +339,12 @@ SP_TEST(role_based_relay_surface_supports_publish_subscribe_and_fetch_flows) {
     });
     publish_result.value()->withdraw();
 
-    SP_EXPECT(relay.last_namespace_handle != nullptr);
-    SP_EXPECT_EQ(relay.last_namespace_handle->statuses.size(), 1U);
-    SP_EXPECT(relay.last_namespace_handle->withdrawn);
+    ASSERT_NE(relay.last_namespace_handle, nullptr);
+    EXPECT_EQ(relay.last_namespace_handle->statuses.size(), 1U);
+    EXPECT_TRUE(relay.last_namespace_handle->withdrawn);
 }
 
-SP_TEST(consumers_capture_status_and_reset_signals) {
+TEST(MoqtSessionRolesTest, ConsumersCaptureStatusAndResetSignals) {
     recording_track_consumer track_consumer;
     recording_fetch_consumer fetch_consumer;
     const auto track = make_track("example.com", "meeting_7", "camera");
@@ -351,14 +371,10 @@ SP_TEST(consumers_capture_status_and_reset_signals) {
     fetch_consumer.on_track_status(status);
     fetch_consumer.on_reset(reset);
 
-    SP_EXPECT_EQ(track_consumer.statuses.size(), 1U);
-    SP_EXPECT_EQ(track_consumer.boundaries.size(), 1U);
-    SP_EXPECT(track_consumer.end_of_track.has_value());
-    SP_EXPECT_EQ(track_consumer.resets.size(), 1U);
-    SP_EXPECT_EQ(fetch_consumer.statuses.size(), 1U);
-    SP_EXPECT_EQ(fetch_consumer.resets.size(), 1U);
+    EXPECT_EQ(track_consumer.statuses.size(), 1U);
+    EXPECT_EQ(track_consumer.boundaries.size(), 1U);
+    EXPECT_TRUE(track_consumer.end_of_track.has_value());
+    EXPECT_EQ(track_consumer.resets.size(), 1U);
+    EXPECT_EQ(fetch_consumer.statuses.size(), 1U);
+    EXPECT_EQ(fetch_consumer.resets.size(), 1U);
 }
-
-#undef SP_EXPECT_EQ
-#undef SP_EXPECT
-#undef SP_TEST

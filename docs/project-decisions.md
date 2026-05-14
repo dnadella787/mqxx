@@ -57,8 +57,6 @@ Read this first for repository-wide defaults and current direction.
 
 ## Immediate practical caveats
 
-- The repository still uses its small built-in test harness today; the GoogleTest choice is a
-  direction, not a completed migration.
 - Quill is not wired into the build yet.
 - The current code defines role/session seams and fake-session infrastructure, but full draft-18
   control-plane behavior is still being implemented.

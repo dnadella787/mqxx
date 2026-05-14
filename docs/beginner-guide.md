@@ -126,7 +126,7 @@ So the current code is best read as:
 
 - protocol model groundwork
 - runtime seam groundwork
-- test harness groundwork
+- deterministic test groundwork
 
 It is **not** yet a working relay.
 

@@ -1,18 +1,8 @@
 #include "mqxx/moqt/full_track_name.hpp"
-#include "test_framework.hpp"
+
+#include <gtest/gtest.h>
 
 #include <string_view>
-
-#define SP_TEST(name)                                                                              \
-    static void name();                                                                            \
-    static const ::mqxx::test::test_registration name##_registration{#name, &name};                 \
-    static void name()
-
-#define SP_EXPECT(expression)                                                                      \
-    ::mqxx::test::expect_true((expression), #expression, __FILE__, __LINE__)
-
-#define SP_EXPECT_EQ(left, right)                                                                  \
-    ::mqxx::test::expect_equal((left), (right), #left, #right, __FILE__, __LINE__)
 
 using mqxx::moqt::byte_string;
 using mqxx::moqt::full_track_name;
@@ -30,16 +20,16 @@ byte_string bytes(std::string_view text) {
 
 } // namespace
 
-SP_TEST(render_serialized_name_leaves_safe_ascii_bytes_unescaped) {
-    SP_EXPECT_EQ(render_serialized_name(bytes("camera_01")), "camera_01");
+TEST(MoqtNameTest, RenderSerializedNameLeavesSafeAsciiBytesUnescaped) {
+    EXPECT_EQ(render_serialized_name(bytes("camera_01")), "camera_01");
 }
 
-SP_TEST(render_serialized_name_escapes_separator_and_binary_bytes) {
+TEST(MoqtNameTest, RenderSerializedNameEscapesSeparatorAndBinaryBytes) {
     const byte_string value{'a', '-', 0xffU};
-    SP_EXPECT_EQ(render_serialized_name(value), "a.2d.ff");
+    EXPECT_EQ(render_serialized_name(value), "a.2d.ff");
 }
 
-SP_TEST(render_and_parse_round_trip_for_full_track_name) {
+TEST(MoqtNameTest, RenderAndParseRoundTripForFullTrackName) {
     const full_track_name original{
         .track_namespace = track_namespace{bytes("example.com"), bytes("meeting_7")},
         .track_name = bytes("camera-main"),
@@ -48,46 +38,42 @@ SP_TEST(render_and_parse_round_trip_for_full_track_name) {
     const std::string rendered = render_serialized_full_track_name(original);
     const auto parsed = parse_serialized_full_track_name(rendered);
 
-    SP_EXPECT(parsed.ok());
-    SP_EXPECT_EQ(parsed.value(), original);
+    ASSERT_TRUE(parsed.ok());
+    EXPECT_EQ(parsed.value(), original);
 }
 
-SP_TEST(parse_allows_empty_namespace_and_non_empty_track_name) {
+TEST(MoqtNameTest, ParseAllowsEmptyNamespaceAndNonEmptyTrackName) {
     const auto parsed = parse_serialized_full_track_name("--catalog");
 
-    SP_EXPECT(parsed.ok());
-    SP_EXPECT_EQ(parsed.value().track_namespace.size(), 0U);
-    SP_EXPECT_EQ(parsed.value().track_name, bytes("catalog"));
+    ASSERT_TRUE(parsed.ok());
+    EXPECT_EQ(parsed.value().track_namespace.size(), 0U);
+    EXPECT_EQ(parsed.value().track_name, bytes("catalog"));
 }
 
-SP_TEST(parse_rejects_missing_track_separator) {
+TEST(MoqtNameTest, ParseRejectsMissingTrackSeparator) {
     const auto parsed = parse_serialized_full_track_name("example-camera");
 
-    SP_EXPECT(!parsed.ok());
-    SP_EXPECT_EQ(parsed.error(), name_parse_error::missing_track_separator);
+    ASSERT_FALSE(parsed.ok());
+    EXPECT_EQ(parsed.error(), name_parse_error::missing_track_separator);
 }
 
-SP_TEST(parse_rejects_uppercase_hex_escapes) {
+TEST(MoqtNameTest, ParseRejectsUppercaseHexEscapes) {
     const auto parsed = parse_serialized_full_track_name("example--camera.2Dmain");
 
-    SP_EXPECT(!parsed.ok());
-    SP_EXPECT_EQ(parsed.error(), name_parse_error::uppercase_hex_escape);
+    ASSERT_FALSE(parsed.ok());
+    EXPECT_EQ(parsed.error(), name_parse_error::uppercase_hex_escape);
 }
 
-SP_TEST(parse_rejects_redundant_hex_escapes) {
+TEST(MoqtNameTest, ParseRejectsRedundantHexEscapes) {
     const auto parsed = parse_serialized_full_track_name("example--.61udio");
 
-    SP_EXPECT(!parsed.ok());
-    SP_EXPECT_EQ(parsed.error(), name_parse_error::redundant_escape);
+    ASSERT_FALSE(parsed.ok());
+    EXPECT_EQ(parsed.error(), name_parse_error::redundant_escape);
 }
 
-SP_TEST(parse_rejects_empty_namespace_fields) {
+TEST(MoqtNameTest, ParseRejectsEmptyNamespaceFields) {
     const auto parsed = parse_serialized_full_track_name("-example--track");
 
-    SP_EXPECT(!parsed.ok());
-    SP_EXPECT_EQ(parsed.error(), name_parse_error::empty_namespace_field);
+    ASSERT_FALSE(parsed.ok());
+    EXPECT_EQ(parsed.error(), name_parse_error::empty_namespace_field);
 }
-
-#undef SP_EXPECT_EQ
-#undef SP_EXPECT
-#undef SP_TEST

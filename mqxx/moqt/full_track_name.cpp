@@ -13,8 +13,7 @@ constexpr std::size_t kMaxNamespaceFields = 32U;
 constexpr std::size_t kMaxFullTrackNameLength = 4096U;
 
 [[nodiscard]] bool is_literal_byte(byte value) {
-    return std::isalnum(value) != 0 ||
-           value == static_cast<std::uint8_t>('_');
+    return std::isalnum(value) != 0 || value == static_cast<std::uint8_t>('_');
 }
 
 [[nodiscard]] int hex_digit_to_value(char value) {
@@ -43,29 +42,25 @@ constexpr std::size_t kMaxFullTrackNameLength = 4096U;
         }
 
         if (index + 2U >= serialized.size()) {
-            return result<unit, name_parse_error>::failure(
-                name_parse_error::invalid_escape);
+            return result<unit, name_parse_error>::failure(name_parse_error::invalid_escape);
         }
 
         const char high = serialized[index + 1U];
         const char low = serialized[index + 2U];
         if (std::isupper(static_cast<unsigned char>(high)) != 0 ||
             std::isupper(static_cast<unsigned char>(low)) != 0) {
-            return result<unit, name_parse_error>::failure(
-                name_parse_error::uppercase_hex_escape);
+            return result<unit, name_parse_error>::failure(name_parse_error::uppercase_hex_escape);
         }
 
         const int high_value = hex_digit_to_value(high);
         const int low_value = hex_digit_to_value(low);
         if (high_value < 0 || low_value < 0) {
-            return result<unit, name_parse_error>::failure(
-                name_parse_error::invalid_escape);
+            return result<unit, name_parse_error>::failure(name_parse_error::invalid_escape);
         }
 
         const auto decoded = static_cast<byte>((high_value << 4) | low_value);
         if (is_literal_byte(decoded)) {
-            return result<unit, name_parse_error>::failure(
-                name_parse_error::redundant_escape);
+            return result<unit, name_parse_error>::failure(name_parse_error::redundant_escape);
         }
 
         output.push_back(decoded);

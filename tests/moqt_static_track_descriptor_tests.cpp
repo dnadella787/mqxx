@@ -1,16 +1,6 @@
 #include "mqxx/moqt/static_track_descriptor.hpp"
-#include "test_framework.hpp"
 
-#define SP_TEST(name)                                                                              \
-    static void name();                                                                            \
-    static const ::mqxx::test::test_registration name##_registration{#name, &name};                 \
-    static void name()
-
-#define SP_EXPECT(expression)                                                                      \
-    ::mqxx::test::expect_true((expression), #expression, __FILE__, __LINE__)
-
-#define SP_EXPECT_EQ(left, right)                                                                  \
-    ::mqxx::test::expect_equal((left), (right), #left, #right, __FILE__, __LINE__)
+#include <gtest/gtest.h>
 
 using mqxx::moqt::render_serialized_full_track_name;
 using mqxx::moqt::static_track_descriptor;
@@ -21,21 +11,17 @@ using camera_track = static_track_descriptor<"camera_hd", "example.com", "meetin
 
 } // namespace
 
-SP_TEST(static_track_descriptor_exposes_compile_time_shape) {
+TEST(MoqtStaticTrackDescriptorTest, ExposesCompileTimeShape) {
     static_assert(camera_track::namespace_field_count == 2U);
     constexpr auto fields = camera_track::namespace_fields();
 
-    SP_EXPECT_EQ(fields[0], "example.com");
-    SP_EXPECT_EQ(fields[1], "meeting_7");
-    SP_EXPECT_EQ(camera_track::track_name(), "camera_hd");
+    EXPECT_EQ(fields[0], "example.com");
+    EXPECT_EQ(fields[1], "meeting_7");
+    EXPECT_EQ(camera_track::track_name(), "camera_hd");
 }
 
-SP_TEST(static_track_descriptor_builds_runtime_name) {
+TEST(MoqtStaticTrackDescriptorTest, BuildsRuntimeName) {
     const auto runtime_name = camera_track::make_runtime_name();
-    SP_EXPECT_EQ(render_serialized_full_track_name(runtime_name),
-                 "example.2ecom-meeting_7--camera_hd");
+    EXPECT_EQ(render_serialized_full_track_name(runtime_name),
+              "example.2ecom-meeting_7--camera_hd");
 }
-
-#undef SP_EXPECT_EQ
-#undef SP_EXPECT
-#undef SP_TEST

@@ -19,7 +19,7 @@ relay forwarding, and QUIC transport integration.
 The project uses a Moxygen-style split:
 
 - headers and implementation files live together under the top-level `mqxx/...` tree
-- the current bootstrap test harness lives in `tests/test_framework.hpp`
+- tests live under `tests/` and are built with GoogleTest
 
 The dependency structure is:
 
@@ -36,7 +36,6 @@ The dependency structure is:
 11. [mqxx/transport/session.hpp](../mqxx/transport/session.hpp)
 12. [mqxx/transport/fake_session.cpp](../mqxx/transport/fake_session.cpp)
 13. [mqxx/transport/fake_session.hpp](../mqxx/transport/fake_session.hpp)
-14. [tests/test_framework.hpp](../tests/test_framework.hpp)
 
 ## Full track names
 
@@ -135,21 +134,15 @@ It exposes operations and events for:
 `fake_session` records outbound writes and lets tests queue inbound events in memory so protocol and
 relay behavior can be exercised without real networking.
 
-## Test harness
+## Tests
 
-Source:
-[tests/test_framework.hpp](../tests/test_framework.hpp)
+Sources:
+[tests/CMakeLists.txt](../tests/CMakeLists.txt)
+[tests/moqt_name_tests.cpp](../tests/moqt_name_tests.cpp)
+[tests/transport_fake_session_tests.cpp](../tests/transport_fake_session_tests.cpp)
 
-The repository currently uses a tiny built-in test harness instead of a third-party dependency.
-It provides:
-
-- a test registration mechanism
-- `expect_true`
-- `expect_equal`
-- a shared registry that `tests/test_main.cpp` executes
-
-That harness is temporary bootstrap infrastructure.
-The long-term framework direction is GoogleTest, but the build has not been migrated yet.
+The repository uses GoogleTest for deterministic parser, seam, and fake-session tests.
+The build prefers an installed package and otherwise fetches GoogleTest during configure time.
 
 ## Why the current code remains easy to follow
 
