@@ -2,6 +2,8 @@
 /build/
 /build-*/
 /cmake-build-*/
+/CMakeUserPresets.json
+/out/
 
 # IDE files
 /.idea/

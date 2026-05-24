@@ -1,0 +1,14 @@
+[settings]
+os=Macos
+arch=armv8
+compiler=clang
+compiler.version=22
+compiler.libcxx=libc++
+build_type=Debug
+
+[conf]
+tools.cmake.cmaketoolchain:generator=Ninja
+tools.build:compiler_executables={"c": "/opt/homebrew/opt/llvm/bin/clang", "cpp": "/opt/homebrew/opt/llvm/bin/clang++"}
+tools.build:cxxflags=["-stdlib=libc++", "-I/opt/homebrew/opt/llvm/include", "-Wno-c2y-extensions"]
+tools.build:exelinkflags=["-L/opt/homebrew/opt/llvm/lib", "-Wl,-rpath,/opt/homebrew/opt/llvm/lib"]
+tools.build:sharedlinkflags=["-L/opt/homebrew/opt/llvm/lib", "-Wl,-rpath,/opt/homebrew/opt/llvm/lib"]

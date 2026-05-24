@@ -1,96 +1,40 @@
-# Dependency Plan
+# Dependencies
 
-## Philosophy
+This repository currently keeps dependency policy intentionally small.
 
-The project should keep dependencies minimal, but "minimal" does not mean "avoid every library."
-Networking code, testing tools, and transport integration often justify focused dependencies if
-they remove a large amount of custom infrastructure or risk.
+## Active dependencies
 
-Dependencies are grouped here so the repo stays easy to reason about while it grows toward fuller
-MOQT library and relay behavior.
-The short repository-wide defaults are summarized in
-[project-decisions.md](project-decisions.md).
+### Conan 2
 
-## Required core dependencies
+Conan is the package manager and toolchain coordinator for this repository.
+It is responsible for:
+
+- dependency resolution
+- CMake toolchain generation
+- CMake preset generation
+- propagating repository build options into configured builds
 
 ### CMake
 
-Used for builds, IDE integration, `compile_commands.json`, and a portable project structure.
+CMake is the build system entry point.
+The root `CMakeLists.txt` owns project-wide options and target assembly.
 
-### Compiler with practical C++26 support
+## Deferred dependencies
 
-The project builds as C++26.
-The implementation also makes practical use of modern features from C++20 and later such as
-`std::span`, ranges algorithms, defaulted comparisons, designated initializers, and non-type
-template parameters for conservative compile-time descriptors.
-
-In practice, that means choosing a modern Clang or MSVC toolchain carefully and testing the exact
-compiler/CMake combination instead of assuming all "C++26" environments behave the same.
-
-### standalone Asio
-
-This is the current decision for the eventual event-loop and async I/O integration layer.
-The current repository does not link Asio yet, but the architecture is being shaped around
-standalone Asio-style boundaries from the start.
-
-## Test-only dependencies
+These are not currently required by the scaffold itself, but the build layout expects them to be
+the first places to plug back in when implementation resumes.
 
 ### GoogleTest
 
-GoogleTest is the repository's unit and fake-session test framework.
-The CMake build first looks for an installed GoogleTest package and otherwise fetches a pinned
-release during configure time.
-For fully offline builds, either preinstall GoogleTest or configure with `-DMQXX_BUILD_TESTS=OFF`.
+The repository layout reserves `tests/` for GoogleTest-based tests.
+No test target is created yet because no test source files are checked in.
+When tests are added back:
 
-GoogleTest fits the repository better because it gives:
+- declare `gtest` in `conanfile.py`
+- restore the `find_package(GTest REQUIRED)` path in `tests/CMakeLists.txt`
+- define the test executable and register it with `gtest_discover_tests`
 
-- a conventional and widely understood fixture model
-- broad ecosystem familiarity for C++ contributors
-- stable parameterized-test and matcher support as protocol/state-machine coverage grows
-- an easier path for future CI and IDE integration than maintaining a custom harness
+### Transport and protocol dependencies
 
-## Optional transport dependencies
-
-### ngtcp2
-
-This is the planned first real QUIC stack.
-It should remain behind a transport abstraction so it does not leak into protocol state types or
-relay policy code.
-
-### Compatible TLS library
-
-`ngtcp2` requires a TLS stack.
-The exact choice should be driven by build simplicity, platform packaging, and integration quality.
-
-### nghttp3
-
-This is not needed for the current direct-QUIC milestone.
-It becomes relevant only if HTTP/3 or WebTransport support is introduced later.
-
-## Future dependencies
-
-These should stay out of the repository until there is a concrete reason:
-
-- fuzzing tools
-- benchmarking tools
-- metrics libraries
-- media parsing/packaging libraries
-- authentication/authorization stacks
-
-## Operational dependencies
-
-### Quill
-
-Quill is the accepted logging library for this repository once real logging is wired into the
-build.
-The current codebase does not link it yet, but the dependency choice itself is no longer deferred.
-
-Quill is a good fit here because the project is expected to grow into a transport-heavy relay where
-logging overhead, thread handoff behavior, and filtered diagnostics matter.
-
-The expected use is:
-
-- subsystem-oriented logs for transport, protocol, and relay behavior
-- filtered verbosity levels for local debugging and integration testing
-- captureable diagnostics during test and bring-up work
-- structured-enough output to support future operational tooling without inventing a custom logger
+No transport stack, TLS stack, or protocol helper dependency is currently active in the source
+tree. Add them only when the reimplementation needs them.

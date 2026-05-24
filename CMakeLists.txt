@@ -11,7 +11,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-option(MQXX_BUILD_TESTS "Build unit and integration-style tests." ON)
+option(MQXX_BUILD_TESTS "Build unit and integration-style tests." OFF)
 option(MQXX_ENABLE_CLANG_TIDY "Enable clang-tidy when available." ON)
 option(MQXX_ENABLE_SANITIZERS "Enable address/undefined sanitizers in supported builds." OFF)
 option(MQXX_WARNINGS_AS_ERRORS "Treat warnings as errors." OFF)
@@ -39,15 +39,9 @@ add_subdirectory(mqxx/common)
 add_subdirectory(mqxx/moqt)
 add_subdirectory(mqxx/transport)
 
-add_library(mqxx_core)
-target_sources(
-    mqxx_core
-    PRIVATE
-        $<TARGET_OBJECTS:mqxx_moqt>
-        $<TARGET_OBJECTS:mqxx_transport>)
-target_compile_features(mqxx_core PUBLIC cxx_std_26)
-target_link_libraries(mqxx_core PUBLIC mqxx_common)
-set_target_properties(mqxx_core PROPERTIES LINKER_LANGUAGE CXX)
+add_library(mqxx_core INTERFACE)
+target_compile_features(mqxx_core INTERFACE cxx_std_26)
+target_link_libraries(mqxx_core INTERFACE mqxx_common mqxx_moqt mqxx_transport)
 
 if(MQXX_BUILD_TESTS)
     include(CTest)
