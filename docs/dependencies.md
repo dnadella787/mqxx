@@ -19,20 +19,23 @@ It is responsible for:
 CMake is the build system entry point.
 The root `CMakeLists.txt` owns project-wide options and target assembly.
 
-## Deferred dependencies
-
-These are not currently required by the scaffold itself, but the build layout expects them to be
-the first places to plug back in when implementation resumes.
+## Active test dependencies
 
 ### GoogleTest
 
-The repository layout reserves `tests/` for GoogleTest-based tests.
-No test target is created yet because no test source files are checked in.
-When tests are added back:
+GoogleTest is active for the default developer loop.
+The Conan recipe declares `gtest` when `build_tests` is enabled, and tests are enabled by default.
 
-- declare `gtest` in `conanfile.py`
-- restore the `find_package(GTest REQUIRED)` path in `tests/CMakeLists.txt`
-- define the test executable and register it with `gtest_discover_tests`
+The current test shape is:
+
+- `find_package(GTest REQUIRED)` in `tests/CMakeLists.txt`
+- one `mqxx_tests` executable
+- `gtest_discover_tests(mqxx_tests)` for CTest registration
+
+Disable tests only when needed with:
+
+- `-DMQXX_BUILD_TESTS=OFF`
+- `-o '&:build_tests=False'`
 
 ### Transport and protocol dependencies
 

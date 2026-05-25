@@ -14,7 +14,7 @@ class MqxxConan(ConanFile):
         "warnings_as_errors": [True, False],
     }
     default_options = {
-        "build_tests": False,
+        "build_tests": True,
         "enable_clang_tidy": True,
         "enable_sanitizers": False,
         "warnings_as_errors": False,

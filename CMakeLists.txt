@@ -11,7 +11,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-option(MQXX_BUILD_TESTS "Build unit and integration-style tests." OFF)
+option(MQXX_BUILD_TESTS "Build unit and integration-style tests." ON)
 option(MQXX_ENABLE_CLANG_TIDY "Enable clang-tidy when available." ON)
 option(MQXX_ENABLE_SANITIZERS "Enable address/undefined sanitizers in supported builds." OFF)
 option(MQXX_WARNINGS_AS_ERRORS "Treat warnings as errors." OFF)
