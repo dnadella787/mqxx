@@ -4,6 +4,7 @@
 
 #include <compare>
 #include <cstddef>
+#include <cstdint>
 #include <expected>
 #include <span>
 #include <vector>
@@ -19,13 +20,13 @@ enum class track_identity_error : std::uint8_t {
 
 class track_namespace {
   public:
-    using field = std::vector<byte>;
+    using field = byte_buffer;
 
     static constexpr std::size_t max_field_count = 32;
     static constexpr std::size_t max_byte_count = 4096;
 
     [[nodiscard]] static std::expected<track_namespace, track_identity_error>
-    make(std::span<const byte_view> fields);
+    make(std::span<const byte_buffer_view> fields);
 
     [[nodiscard]] std::span<const field> fields() const noexcept;
     [[nodiscard]] std::size_t byte_count() const noexcept;
@@ -42,18 +43,19 @@ class track_namespace {
 
 class track_name {
   public:
-    [[nodiscard]] static std::expected<track_name, track_identity_error> make(byte_view bytes);
+    [[nodiscard]] static std::expected<track_name, track_identity_error>
+    make(byte_buffer_view bytes);
 
-    [[nodiscard]] byte_view bytes() const noexcept;
+    [[nodiscard]] byte_buffer_view bytes() const noexcept;
     [[nodiscard]] std::size_t byte_count() const noexcept;
 
     [[nodiscard]] bool operator==(const track_name& other) const = default;
     [[nodiscard]] std::strong_ordering operator<=>(const track_name& other) const = default;
 
   private:
-    explicit track_name(std::vector<byte> bytes);
+    explicit track_name(mqxx::byte_buffer owned_bytes);
 
-    std::vector<byte> bytes_;
+    mqxx::byte_buffer bytes_;
 };
 
 class full_track_name {

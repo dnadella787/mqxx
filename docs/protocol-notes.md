@@ -30,3 +30,28 @@ Deferred intentionally:
 - object and group delivery
 - track aliases
 - QUIC transport integration
+
+## Namespace Registry
+
+The in-memory `moqt::namespace_registry` stores namespace entries by `moqt::track_namespace`.
+
+Implemented now:
+
+- insertion returns `std::expected` with the inserted entry or an explicit duplicate error.
+- duplicate insertion leaves the existing entry and registry size unchanged.
+- exact lookup returns the entry whose namespace exactly equals the query namespace.
+- longest-prefix lookup returns the registered namespace with the most whole fields matching the
+  leading fields of the query namespace.
+- the empty namespace is a valid prefix of every namespace.
+- empty registry and not-found lookups return `std::nullopt`.
+
+Prefix matching is field-wise. A registered field must equal the whole query field at the same
+position; matching only the leading bytes within a field is not a prefix match.
+
+Deferred intentionally:
+
+- publish and subscribe control messages
+- relay policy beyond deterministic lookup semantics
+- concurrent access
+- production indexing and performance tuning
+- transport integration

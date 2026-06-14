@@ -5,7 +5,7 @@
 namespace mqxx::moqt {
 
 std::expected<track_namespace, track_identity_error>
-track_namespace::make(const std::span<const byte_view> fields) {
+track_namespace::make(const std::span<const byte_buffer_view> fields) {
     // we allow track namespaces without any fields but if there are fields,
     // each field must have at least 1 byte
     if (fields.size() > max_field_count) {
@@ -16,7 +16,7 @@ track_namespace::make(const std::span<const byte_view> fields) {
     owned_fields.reserve(fields.size());
 
     std::size_t byte_count = 0;
-    for (const byte_view field_bytes : fields) {
+    for (const byte_buffer_view field_bytes : fields) {
         if (field_bytes.empty()) {
             return std::unexpected(track_identity_error::empty_namespace_field);
         }
@@ -43,11 +43,11 @@ std::size_t track_namespace::byte_count() const noexcept {
 track_namespace::track_namespace(std::vector<field> fields, std::size_t byte_count)
     : fields_(std::move(fields)), byte_count_(byte_count) {}
 
-std::expected<track_name, track_identity_error> track_name::make(byte_view bytes) {
+std::expected<track_name, track_identity_error> track_name::make(byte_buffer_view bytes) {
     return track_name(std::vector(bytes.begin(), bytes.end()));
 }
 
-byte_view track_name::bytes() const noexcept {
+byte_buffer_view track_name::bytes() const noexcept {
     return bytes_;
 }
 
@@ -55,7 +55,7 @@ std::size_t track_name::byte_count() const noexcept {
     return bytes_.size();
 }
 
-track_name::track_name(std::vector<byte> bytes) : bytes_(std::move(bytes)) {}
+track_name::track_name(mqxx::byte_buffer owned_bytes) : bytes_(std::move(owned_bytes)) {}
 
 std::expected<full_track_name, track_identity_error>
 full_track_name::make(track_namespace name_space, track_name name) {
