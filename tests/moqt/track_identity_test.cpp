@@ -38,6 +38,17 @@ TEST(track_namespace_test, preserves_binary_fields) {
     EXPECT_EQ(name_space->byte_count(), 4U);
 }
 
+TEST(track_namespace_test, describe_renders_fields_with_byte_escaping) {
+    std::vector first = {std::byte{0x00}, std::byte{0x2d}, std::byte{0xff}};
+    std::vector second = {std::byte{'Z'}, std::byte{'9'}, std::byte{'_'}};
+    std::array fields{as_view(first), as_view(second)};
+
+    const auto name_space = track_namespace::make(fields);
+
+    ASSERT_TRUE(name_space.has_value());
+    EXPECT_EQ(name_space->describe(), ".00.2d.ff-Z9_");
+}
+
 TEST(track_namespace_test, owns_copied_field_bytes) {
     std::array source = {std::byte{0x10}};
     std::array fields = {byte_buffer_view(source)};
@@ -134,6 +145,15 @@ TEST(track_name_test, equality_and_ordering_use_exact_bytes) {
     EXPECT_LT(*low_name, *high_name);
 }
 
+TEST(track_name_test, describe_renders_safe_bytes_literally_and_others_as_hex) {
+    constexpr std::array bytes = {std::byte{0x2f}, std::byte{0x00}, std::byte{'A'}};
+
+    const auto name = track_name::make(byte_buffer_view(bytes));
+
+    ASSERT_TRUE(name.has_value());
+    EXPECT_EQ(name->describe(), ".2f.00A");
+}
+
 TEST(track_namespace_test, equality_and_ordering_use_exact_bytes) {
     constexpr std::array low = {std::byte{0x01}};
     constexpr std::array high = {std::byte{0x02}};
@@ -222,6 +242,22 @@ TEST(full_track_name_test, equality_and_ordering_use_namespace_then_name_bytes) 
     ASSERT_TRUE(high_full_name.has_value());
     EXPECT_EQ(*low_full_name, *same_low_full_name);
     EXPECT_LT(*low_full_name, *high_full_name);
+}
+
+TEST(full_track_name_test, describe_uses_namespace_separator_and_track_escape_rules) {
+    constexpr std::array first_field = {std::byte{'a'}};
+    constexpr std::array second_field = {std::byte{'b'}};
+    constexpr std::array name_bytes = {std::byte{0xef}, std::byte{'-'}};
+    const std::array fields = {byte_buffer_view(first_field), byte_buffer_view(second_field)};
+    const auto name_space = track_namespace::make(fields);
+    const auto name = track_name::make(byte_buffer_view(name_bytes));
+
+    ASSERT_TRUE(name_space.has_value());
+    ASSERT_TRUE(name.has_value());
+    const auto full_name = full_track_name::make(*name_space, *name);
+
+    ASSERT_TRUE(full_name.has_value());
+    EXPECT_EQ(full_name->describe(), "a-b--.ef.2d");
 }
 
 } // namespace

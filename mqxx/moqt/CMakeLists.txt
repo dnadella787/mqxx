@@ -4,11 +4,13 @@ target_sources(
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/namespace_registry.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/track_identity.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/wire.cpp
     PUBLIC
         FILE_SET HEADERS
         BASE_DIRS ${PROJECT_SOURCE_DIR}
         FILES
             ${CMAKE_CURRENT_SOURCE_DIR}/namespace_registry.hpp
-            ${CMAKE_CURRENT_SOURCE_DIR}/track_identity.hpp)
+            ${CMAKE_CURRENT_SOURCE_DIR}/track_identity.hpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/wire.hpp)
 target_link_libraries(mqxx_moqt PUBLIC mqxx_common)
 mqxx_configure_target(mqxx_moqt)

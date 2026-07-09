@@ -37,7 +37,6 @@ endfunction()
 
 add_subdirectory(mqxx/common)
 add_subdirectory(mqxx/moqt)
-add_subdirectory(mqxx/transport)
 
 add_library(mqxx_core INTERFACE)
 target_compile_features(mqxx_core INTERFACE cxx_std_26)
