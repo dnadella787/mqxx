@@ -160,7 +160,7 @@ TEST(key_value_pair_test, roundtrips_sequences_without_reordering) {
 
 TEST(key_value_pair_test, rejects_delta_type_overflow) {
     const auto decoded = decode_key_value_pairs(
-        bytes({0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01, 0x00}));
+        bytes({0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe, 0x00, 0x02}));
     ASSERT_FALSE(decoded.has_value());
     EXPECT_EQ(decoded.error(), wire_error::key_type_overflow);
 }
