@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <expected>
 #include <span>
+#include <string>
 #include <vector>
 
 namespace mqxx::moqt {
@@ -30,6 +31,7 @@ class track_namespace {
 
     [[nodiscard]] std::span<const field> fields() const noexcept;
     [[nodiscard]] std::size_t byte_count() const noexcept;
+    [[nodiscard]] std::string describe() const;
 
     [[nodiscard]] bool operator==(const track_namespace& other) const = default;
     [[nodiscard]] std::strong_ordering operator<=>(const track_namespace& other) const = default;
@@ -48,14 +50,15 @@ class track_name {
 
     [[nodiscard]] byte_buffer_view bytes() const noexcept;
     [[nodiscard]] std::size_t byte_count() const noexcept;
+    [[nodiscard]] std::string describe() const;
 
     [[nodiscard]] bool operator==(const track_name& other) const = default;
     [[nodiscard]] std::strong_ordering operator<=>(const track_name& other) const = default;
 
   private:
-    explicit track_name(mqxx::byte_buffer owned_bytes);
+    explicit track_name(byte_buffer owned_bytes);
 
-    mqxx::byte_buffer bytes_;
+    byte_buffer bytes_;
 };
 
 class full_track_name {
@@ -68,6 +71,7 @@ class full_track_name {
     [[nodiscard]] const track_namespace& name_space() const noexcept;
     [[nodiscard]] const track_name& name() const noexcept;
     [[nodiscard]] std::size_t byte_count() const noexcept;
+    [[nodiscard]] std::string describe() const;
 
     [[nodiscard]] bool operator==(const full_track_name& other) const = default;
     [[nodiscard]] std::strong_ordering operator<=>(const full_track_name& other) const = default;

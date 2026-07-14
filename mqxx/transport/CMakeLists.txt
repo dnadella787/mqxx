@@ -1,2 +1,0 @@
-add_library(mqxx_transport INTERFACE)
-target_link_libraries(mqxx_transport INTERFACE mqxx_common)

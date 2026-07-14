@@ -27,7 +27,9 @@ protocol and transport work can be added in predictable modules without reworkin
 - `mqxx/moqt/`
   MOQT protocol, naming, session, and other domain-specific logic should go here.
 - `mqxx/transport/`
-  Transport abstractions and concrete transport integrations should go here.
+  Transport abstractions and concrete transport integrations should go here. Keep the boundary
+  stable enough that a `Boost.Corosio`-backed runtime can sit underneath it without changing MOQT
+  model types.
 
 Each module already has a local `CMakeLists.txt`. Keep target wiring local to the module when new
 files are added, and keep includes rooted at `mqxx/...`.
