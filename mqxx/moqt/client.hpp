@@ -1,26 +1,34 @@
-// #pragma once
+#pragma once
 
-// #include <future>
-// #include <expected>
-// #include <cstdint> 
+#include "mqxx/moqt/session.hpp"
 
-// namespace mqxx::moqt {
+#include <future>
+#include <expected>
+#include <cstdint>
 
-// enum class setup_error : std::uint8_t {
-//     placeholder_error
-// };
+namespace mqxx::moqt {
 
-// class moq_client {
-//     public:
-//         struct setup_result {
-//             uint64_t negotiated_version;
-//         };
+struct url {
+    std::string scheme;
+    std::string authority; // should be broken into host/port later
+    std::string path;
 
-//         [[nodiscard]] std::expected<session, setup_error>
-//         setupMoq()
+    // query and fragment are intentionally excluded for now
 
-//     private:
-//         // control plane goes here
-// };
+};
 
-// } // namespace mqxx::moqt
+class moq_client {
+    public:
+        [[nodiscard]] std::expected<setup, setup_error>
+        client_send_moq_setup(); // extract url data, send to build_setup and then send setup
+
+    private:
+        url client_url_;
+        // leave maxes at default for now
+        std::uint64_t max_auth_token_cache_size_ = 0;
+        std::uint64_t max_filter_ranges_ = 0,
+        std::uint64_t max_request_updates_ = 0
+
+};
+
+} // namespace mqxx::moqt
