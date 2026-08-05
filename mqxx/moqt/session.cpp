@@ -107,7 +107,7 @@ control_plane::send_setup(const setup& local_setup) {
 }
 
 std::expected<setup, setup_error>
-control_plane::handle_peer_setup() {
+control_plane::handle_peer_setup(byte_buffer setup_bytes) {
     if (inbound_state_ == control_stream_state::setup_received) {
         return std::unexpected(setup_error::already_received);
     }

@@ -8,7 +8,7 @@
 
 namespace mqxx::moqt {
 
-struct url {
+struct uri {
     std::string scheme;
     std::string authority; // should be broken into host/port later
     std::string path;
@@ -18,16 +18,16 @@ struct url {
 
 class moq_client {
     public:
-        explicit moq_client(url client_url, bool web_transport = false)
-            : client_url_(std::move(client_url)),
+        explicit moq_client(uri client_uri, bool web_transport = false)
+            : client_uri_(std::move(client_uri)),
               web_transport_(web_transport),
               control_plane_(endpoint_role::client, web_transport) {}
 
         [[nodiscard]] std::expected<void, setup_error>
-        client_send_moq_setup(); // extract url data, send to build_setup and then send setup
+        client_send_moq_setup(); // extract uri data, send to build_setup and then send setup
 
     private:
-        url client_url_;
+        uri client_uri_;
         bool web_transport_ = false;
         // leave maxes at default for now
         std::uint64_t max_auth_token_cache_size_ = 0;

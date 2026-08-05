@@ -91,3 +91,41 @@ Deferred intentionally:
 - concurrent access
 - production indexing and performance tuning
 - transport integration
+
+## Control Stream
+
+This repository now models the establishment (`SETUP`) and termination (`GOAWAY`) of a MOQT control stream from `draft-ietf-moq-transport-18`, Sections `3.3`, `10.3`, `10.3.1`, and `10.4`.
+
+Implemented now:
+
+- `moqt::control_plane` is an endpoint-localized instance of a pair of control streams.
+- state transitions of the control stream state are tracked through `outbound_state_` and `inbound_state_`.
+- a `SETUP` message can be built using `moqt::build_setup()` and should be sent through the method `send_setup()` as soon as a QUIC connection has been established.
+- the `handle_peer_setup()` method validates any incoming control message identified as a `SETUP` message.
+- both `SETUP` methods are encoded/decoded as a `setup` object according to Section `10.3, Figure 6` through `moqt::decode_setup()` and `moqt::encode_setup`.
+- servers are blocked from creating a `setup` with `authority` or `path`.
+- neither `authority` or `auth_token` should be empty strings if sent as an argument.
+- a `GOAWAY` message can be sent through the method `send_goaway()` and incoming `GOAWAY` messages are validated through `receive_goaway()`
+- similar to `SETUP`, `GOAWAY` messages are encoded/decoded as a `goaway` object through their own dedicated functions according to Section `10.4, Figure 7`.
+
+Deferred intentionally:
+
+- QUIC stream I/O
+- asynchronous function handling of `SETUP` functions through `corosio`
+- authentication tokens
+- URI decomposition
+
+## Endpoints
+
+Both `CLIENT` and `SERVER` have been frameworked in order to serve as testable endpoints for a `SETUP` exchange.
+
+Implemented now:
+- `moq_client` and `moq_server` both create their own `control_plane` instances representing an interface to their respective control streams
+- only `moq_client` is allowed to contain a `uri` object
+- both endpoints can attempt to initiate a MOQT session by sending a `SETUP` object
+
+Deferred intentionally:
+
+- completion of session establishment
+- URI query and fragment
+- `GOAWAY` handling

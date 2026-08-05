@@ -182,9 +182,8 @@ TEST(control_plane_test, handle_peer_setup_decodes_and_marks_inbound_received) {
     ASSERT_TRUE(peer_setup.has_value());
     const auto encoded = encode_setup(peer_setup->params);
     ASSERT_TRUE(encoded.has_value());
-    plane.setup_bytes = *encoded;
 
-    const auto result = plane.handle_peer_setup();
+    const auto result = plane.handle_peer_setup(*encoded);
 
     ASSERT_TRUE(result.has_value());
     EXPECT_EQ(result->params, peer_setup->params);
@@ -196,10 +195,9 @@ TEST(control_plane_test, handle_peer_setup_rejects_second_receive) {
     ASSERT_TRUE(peer_setup.has_value());
     const auto encoded = encode_setup(peer_setup->params);
     ASSERT_TRUE(encoded.has_value());
-    plane.setup_bytes = *encoded;
-    ASSERT_TRUE(plane.handle_peer_setup().has_value());
+    ASSERT_TRUE(plane.handle_peer_setup(*encoded).has_value());
 
-    const auto second = plane.handle_peer_setup();
+    const auto second = plane.handle_peer_setup(*encoded);
 
     ASSERT_FALSE(second.has_value());
     EXPECT_EQ(second.error(), setup_error::already_received);
@@ -207,9 +205,10 @@ TEST(control_plane_test, handle_peer_setup_rejects_second_receive) {
 
 TEST(control_plane_test, handle_peer_setup_reports_decode_error_for_malformed_bytes) {
     control_plane plane(endpoint_role::server, false);
-    plane.setup_bytes = byte_buffer{std::byte{0x01}, std::byte{0x00}, std::byte{0x00}};
+    // Not a valid SETUP: wrong leading type tag.
+    const byte_buffer malformed{std::byte{0x01}, std::byte{0x00}, std::byte{0x00}};
 
-    const auto result = plane.handle_peer_setup();
+    const auto result = plane.handle_peer_setup(malformed);
 
     ASSERT_FALSE(result.has_value());
     EXPECT_EQ(result.error(), setup_error::decode_error);
@@ -222,9 +221,8 @@ TEST(control_plane_test, client_rejects_authority_in_peer_setup) {
                         byte_buffer{std::byte{'x'}}}}};
     const auto encoded = encode_setup(malicious_server_setup.params);
     ASSERT_TRUE(encoded.has_value());
-    plane.setup_bytes = *encoded;
 
-    const auto result = plane.handle_peer_setup();
+    const auto result = plane.handle_peer_setup(*encoded);
 
     ASSERT_FALSE(result.has_value());
     EXPECT_EQ(result.error(), setup_error::invalid_authority);
@@ -237,9 +235,8 @@ TEST(control_plane_test, server_accepts_authority_in_peer_setup) {
     ASSERT_TRUE(peer_setup.has_value());
     const auto encoded = encode_setup(peer_setup->params);
     ASSERT_TRUE(encoded.has_value());
-    plane.setup_bytes = *encoded;
 
-    const auto result = plane.handle_peer_setup();
+    const auto result = plane.handle_peer_setup(*encoded);
 
     ASSERT_TRUE(result.has_value());
 }

@@ -7,8 +7,8 @@ moq_client::client_send_moq_setup() {
     auto client_setup = build_setup(
         endpoint_role::client,
         web_transport_,
-        client_url_.authority,
-        client_url_.path,
+        client_uri_.authority,
+        client_uri_.path,
         max_auth_token_cache_size_,
         std::nullopt,
         "moqt-18",

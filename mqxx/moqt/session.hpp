@@ -88,7 +88,7 @@ class control_plane {
         [[nodiscard]] std::expected<void, setup_error>
         send_setup(const setup& local_setup);
         [[nodiscard]] std::expected<setup, setup_error>
-        handle_peer_setup();
+        handle_peer_setup(byte_buffer setup_bytes);
 
         [[nodiscard]] std::expected<void, goaway_error>
         send_goaway(
@@ -96,8 +96,6 @@ class control_plane {
             std::optional<std::uint64_t> local_timeout = std::nullopt);
         [[nodiscard]] std::expected<std::string, goaway_error>
         receive_goaway(std::span<const std::byte> goaway_bytes);
-
-        byte_buffer setup_bytes; // testing placeholder
 
     private:
         endpoint_role role_;
