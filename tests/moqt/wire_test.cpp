@@ -337,5 +337,68 @@ TEST(full_track_name_wire_test, rejects_over_limit_and_truncated_inputs) {
     EXPECT_EQ(truncated.error(), wire_error::truncated_input);
 }
 
+TEST(setup_test, roundtrips_typical_options) {
+    const std::vector<key_value_pair> pairs = {
+        {4, std::uint64_t{4096}},
+        {7, bytes({0xae, 0x71, 0x78, 0x78})},
+    };
+
+    const auto encoded = encode_setup(pairs);
+    ASSERT_TRUE(encoded.has_value());
+
+    const auto decoded = decode_setup(*encoded);
+    ASSERT_TRUE(decoded.has_value());
+    EXPECT_EQ(*decoded, pairs);
+}
+
+TEST(setup_test, roundtrips_empty_options) {
+    const std::vector<key_value_pair> pairs = {};
+
+    const auto encoded = encode_setup(pairs);
+    ASSERT_TRUE(encoded.has_value());
+
+    const auto decoded = decode_setup(*encoded);
+    ASSERT_TRUE(decoded.has_value());
+    EXPECT_TRUE(decoded->empty());
+}
+
+TEST(setup_test, decode_rejects_wrong_type) {
+    const auto encoded = bytes({0xae, 0x00, 0x00, 0x00});
+
+    const auto decoded = decode_setup(encoded);
+    ASSERT_FALSE(decoded.has_value());
+    EXPECT_EQ(decoded.error(), wire_error::invalid_type);
+}
+
+TEST(setup_test, decode_rejects_truncated_length_field) {
+    const auto truncated = bytes({0xaf, 0x00, 0x00});
+
+    const auto decoded = decode_setup(truncated);
+    ASSERT_FALSE(decoded.has_value());
+    EXPECT_EQ(decoded.error(), wire_error::truncated_input);
+}
+
+TEST(setup_test, decode_rejects_length_exceeding_available_bytes) {
+    const auto encoded = bytes({0xaf, 0x00, 0x00, 0x64});
+
+    const auto decoded = decode_setup(encoded);
+    ASSERT_FALSE(decoded.has_value());
+    EXPECT_EQ(decoded.error(), wire_error::truncated_input);
+}
+
+TEST(setup_test, decode_ignores_trailing_bytes_beyond_declared_length) {
+    const std::vector<key_value_pair> pairs = {
+        {2, std::uint64_t{5}},
+    };
+    auto encoded = encode_setup(pairs);
+    ASSERT_TRUE(encoded.has_value());
+    encoded->push_back(std::byte{0xaa});
+    encoded->push_back(std::byte{0xbb});
+
+    const auto decoded = decode_setup(*encoded);
+    ASSERT_TRUE(decoded.has_value());
+    EXPECT_EQ(*decoded, pairs);
+}
+
 } // namespace
 } // namespace mqxx::moqt

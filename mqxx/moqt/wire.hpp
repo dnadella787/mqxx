@@ -53,6 +53,13 @@ struct reason_phrase {
     [[nodiscard]] bool operator==(const reason_phrase& other) const = default;
 };
 
+struct goaway {
+    std::string new_session_uri = "";
+    std::uint64_t timeout = 0;
+
+    [[nodiscard]] bool operator==(const goaway& other) const = default;
+};
+
 enum class wire_error : std::uint8_t {
     truncated_input,
     invalid_varint_length,
@@ -64,6 +71,8 @@ enum class wire_error : std::uint8_t {
     empty_namespace_field_on_wire,
     namespace_too_large,
     full_track_name_too_large,
+    invalid_type,
+    new_session_uri_too_large,
 };
 
 [[nodiscard]] std::expected<decoded_varint, wire_error>
@@ -97,5 +106,17 @@ decode_track_namespace(std::span<const std::byte> encoded);
 decode_full_track_name(std::span<const std::byte> encoded);
 
 [[nodiscard]] byte_buffer encode_full_track_name(const full_track_name& name);
+
+[[nodiscard]] std::expected<std::vector<key_value_pair>, wire_error>
+decode_setup(std::span<const std::byte> encoded);
+
+[[nodiscard]] std::expected<byte_buffer, wire_error>
+encode_setup(std::span<const key_value_pair> setup_payload);
+
+[[nodiscard]] std::expected<goaway, wire_error>
+decode_goaway(std::span<const std::byte> encoded);
+
+[[nodiscard]] std::expected<byte_buffer, wire_error>
+encode_goaway(const goaway& goaway_payload);
 
 } // namespace mqxx::moqt

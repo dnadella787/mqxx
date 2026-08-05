@@ -23,7 +23,7 @@ Read these first:
 - `mqxx/common/byte_buffer.hpp` is the first shared header in the explicit `mqxx/` subtree
 - includes are kept in `mqxx/...` form inside the project, but the repo is currently standalone
   rather than packaged for external consumers
-- `mqxx_tests` currently covers the common byte-view seam
+- `mqxx_tests` currently covers the common byte-view seam along with the control stream life cycle
 
 ## Quick start
 
