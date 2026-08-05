@@ -436,27 +436,6 @@ byte_buffer encode_full_track_name(const full_track_name& name) {
     return encoded;
 }
 
-// prefer to use setup payload directly rather than unwrapping
-std::expected<byte_buffer, wire_error>
-encode_setup(std::span<const key_value_pair> setup_payload) {
-    byte_buffer encoded;
-    auto encoded_params = encode_key_value_pairs(setup_payload);
-    if (!encoded_params) {
-        return std::unexpected(encoded_params.error());
-    }
-
-    if (encoded_params->size() > std::numeric_limits<std::uint16_t>::max()) {
-        return std::unexpected(wire_error::key_value_length_too_large);
-    }
-    const auto length = static_cast<std::uint16_t>(encoded_params->size());
-
-    append_varint(encoded, 0x2F00U);
-    append_uintx(encoded, length);
-    append_bytes(encoded, *encoded_params);
-
-    return encoded;
-}
-
 std::expected<std::vector<key_value_pair>, wire_error>
 decode_setup(std::span<const std::byte> encoded) {
     const auto type = decode_varint(encoded);
@@ -483,6 +462,103 @@ decode_setup(std::span<const std::byte> encoded) {
 
     // empty options still returns blank KVP
     return options;
+}
+
+// prefer to use setup payload directly rather than unwrapping
+std::expected<byte_buffer, wire_error>
+encode_setup(std::span<const key_value_pair> setup_payload) {
+    byte_buffer encoded;
+    auto encoded_params = encode_key_value_pairs(setup_payload);
+    if (!encoded_params.has_value()) {
+        return std::unexpected(encoded_params.error());
+    }
+
+    if (encoded_params->size() > std::numeric_limits<std::uint16_t>::max()) {
+        return std::unexpected(wire_error::key_value_length_too_large);
+    }
+    const auto length = static_cast<std::uint16_t>(encoded_params->size());
+
+    append_varint(encoded, 0x2F00U);
+    append_uintx(encoded, length);
+    append_bytes(encoded, *encoded_params);
+
+    return encoded;
+}
+
+std::expected<goaway, wire_error>
+decode_goaway(std::span<const std::byte> encoded) {
+    const auto type = decode_varint(encoded);
+    
+    if (!type.has_value()) {
+        return std::unexpected(type.error());
+    }
+    if (type->value != 0x10U) {
+        return std::unexpected(wire_error::invalid_type);
+    }
+
+    std::size_t offset = type->encoded_size;
+    if (encoded.size() < offset + 2) {
+        return std::unexpected(wire_error::truncated_input);
+    }
+
+    const unsigned length = static_cast<unsigned>(encoded[offset] << 8) | static_cast<unsigned>(encoded[offset + 1]);
+    offset += 2;
+    if (encoded.size() < offset + length) {
+        return std::unexpected(wire_error::truncated_input);
+    }
+
+    const auto uri_length = decode_varint(encoded.subspan(offset));
+    if (!uri_length.has_value()) {
+        return std::unexpected(type.error());
+    }
+    if (uri_length->value > (1U << 13)) {
+        return std::unexpected(wire_error::new_session_uri_too_large);
+    }
+    offset += uri_length->encoded_size;
+
+    const auto uri = encoded.subspan(offset, static_cast<std::size_t>(uri_length->value));
+    offset += uri.size();
+
+    const auto timeout = decode_varint(encoded.subspan(offset));
+    if (!timeout.has_value()) {
+        return std::unexpected(type.error());
+    }
+
+    return goaway{
+        std::string(reinterpret_cast<const char*>(uri.data()), uri.size()),
+        timeout->value};
+}
+
+std::expected<byte_buffer, wire_error>
+encode_goaway(const goaway& goaway_payload) {
+    encoded_varint e_timeout = encode_varint(goaway_payload.timeout);
+
+    if (goaway_payload.new_session_uri.size() > (1U << 13)) {
+        return std::unexpected(wire_error::new_session_uri_too_large);
+    }
+    const std::span<const char> chars(goaway_payload.new_session_uri.data(), goaway_payload.new_session_uri.size());
+    const auto e_uri = std::as_bytes(chars);
+
+    const auto uri_length = static_cast<std::uint64_t>(e_uri.size());
+    encoded_varint e_uri_length = encode_varint(uri_length);
+
+    const auto payload_size = e_uri_length.size + e_uri.size() + e_timeout.size;
+    if (payload_size > std::numeric_limits<std::uint16_t>::max()) {
+        return std::unexpected(wire_error::key_value_length_too_large);
+    }
+    const auto length = static_cast<std::uint16_t>(payload_size);
+
+    encoded_varint e_type = encode_varint(0x10U);
+
+    byte_buffer encoded;
+    encoded.reserve(e_type.size + 2 + length);
+    append_bytes(encoded, e_type.view());
+    append_uintx(encoded, length);
+    append_bytes(encoded, e_uri_length.view());
+    append_bytes(encoded, e_uri);
+    append_bytes(encoded, e_timeout.view());
+    
+    return encoded;
 }
 
 } // namespace mqxx::moqt
